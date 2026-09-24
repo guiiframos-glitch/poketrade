@@ -1,0 +1,2480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PokéTrade — Marketplace de Cartas Pokémon</title>
+<style>
+  :root{
+    --bg:#0A0D13; --bg-soft:#0F1420; --surface:#141A26; --surface-2:#1A2233;
+    --line:#26304680; --line-solid:#2A3448;
+    --text:#E7ECF7; --text-dim:#8B96AD; --text-faint:#5C6680;
+    --red:#E3402A; --red-dark:#B22E1C; --red-glow:#FF5B40;
+    --yellow:#F5C324; --yellow-glow:#FFD84D;
+    --teal:#22B8A6; --teal-dark:#178F82; --teal-glow:#3DDFCB;
+    --green:#3BC46A; --green-dark:#289450;
+    --gold:#D9B34D; --gold-glow:#F0CE6E;
+    --blue:#4C8DFF;
+    --muted:#8B96AD;
+    --display: 'Helvetica Neue', Arial, sans-serif;
+    --sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    --mono: 'Courier New', Courier, monospace;
+    --radius: 4px;
+    --radius-lg: 6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  body{
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 46px 46px;
+    background-attachment: fixed;
+  }
+  h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-.2px;}
+  p{margin:0;}
+  button{font-family:var(--sans); cursor:pointer;}
+  a{color:inherit;text-decoration:none;}
+  .container{max-width:1200px;margin:0 auto;padding:0 28px;}
+  ::selection{background:var(--red);color:#fff;}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:bold;}
+
+  /* NAVBAR */
+  #topstrip{height:3px;background:linear-gradient(90deg,var(--red) 0%,var(--red) 30%,var(--yellow) 30%,var(--yellow) 55%,var(--teal) 55%,var(--teal) 100%);}
+  #navbar{position:sticky;top:0;z-index:50;background:rgba(10,13,19,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-solid);}
+  .indicator-lights{display:flex;gap:5px;align-items:center;margin-right:2px;}
+  .indicator-lights span{width:6px;height:6px;border-radius:50%;display:block;}
+  .indicator-lights .l1{background:var(--red);box-shadow:0 0 4px var(--red);}
+  .indicator-lights .l2{background:var(--yellow);box-shadow:0 0 4px var(--yellow);}
+  .indicator-lights .l3{background:var(--teal);box-shadow:0 0 4px var(--teal);}
+  #navbar .bar{display:flex;align-items:center;gap:26px;height:64px;}
+  .logo-mark{display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .logo-emblem{width:26px;height:26px;flex-shrink:0;}
+  .logo-mark .logo-text{font-family:var(--display);font-weight:800;font-size:18px;color:var(--text);letter-spacing:.5px;white-space:nowrap;}
+  .logo-mark .logo-text .accent{color:var(--red);}
+  #navbar nav{display:flex;gap:4px;flex:1;}
+  #navbar nav a{font-family:var(--mono);font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--text-dim);padding:9px 13px;border-radius:4px;font-weight:bold;border:1px solid transparent;}
+  #navbar nav a.active{color:var(--yellow);background:#1D2333;border-color:var(--line-solid);}
+  #navbar nav a:hover{color:var(--text);}
+  #navbar .search{flex:1;max-width:300px;position:relative;}
+  #navbar .search:before{content:'>';position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--teal);font-family:var(--mono);font-size:13px;}
+  #navbar .search input{width:100%;padding:8px 13px 8px 26px;border-radius:4px;border:1px solid var(--line-solid);background:var(--surface);color:var(--text);font-size:12.5px;font-family:var(--mono);}
+  #navbar .search input::placeholder{color:var(--text-faint);}
+  #navbar .search input:focus{outline:none;border-color:var(--teal);}
+  #navbar .right{display:flex;align-items:center;gap:10px;}
+  #navbar .icon-btn{width:34px;height:34px;border-radius:4px;border:1px solid var(--line-solid);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;color:var(--text-dim);}
+  #navbar .icon-btn:hover{border-color:var(--teal);color:var(--text);}
+  #navbar .avatar{width:34px;height:34px;border-radius:4px;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;border:none;font-size:12.5px;}
+  .badge-count{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:9.5px;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center;font-weight:bold;box-shadow:0 0 6px var(--red-glow);}
+  .user-chip{display:flex;align-items:center;gap:8px;cursor:pointer;}
+  .user-chip .uname{font-size:12px;color:var(--text-dim);font-family:var(--mono);}
+  .notif-panel{position:absolute;top:60px;right:28px;width:330px;max-height:420px;overflow-y:auto;background:var(--surface);border:1px solid var(--line-solid);border-radius:6px;box-shadow:0 20px 50px rgba(0,0,0,.5);z-index:100;}
+  .notif-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line-solid);font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--text-dim);}
+  .notif-head button{background:none;border:none;color:var(--teal);font-size:10.5px;font-weight:600;font-family:var(--mono);}
+  .notif-item{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line-solid);cursor:pointer;border-left:2px solid transparent;}
+  .notif-item:hover{background:var(--surface-2);}
+  .notif-item:last-child{border-bottom:none;}
+  .notif-item[data-notif]{border-left-color:var(--line-solid);}
+  .notif-dot{width:6px;height:6px;border-radius:50%;background:transparent;margin-top:5px;flex-shrink:0;}
+  .notif-item.unread .notif-dot{background:var(--yellow);box-shadow:0 0 5px var(--yellow-glow);}
+  .notif-text{font-size:12.5px;color:var(--text);}
+  .notif-item.unread .notif-text{font-weight:600;}
+  .notif-date{font-size:10px;color:var(--text-faint);margin-top:2px;font-family:var(--mono);}
+  .notif-empty{padding:22px;text-align:center;color:var(--text-dim);font-size:12px;}
+  @media (max-width:820px){
+    #navbar nav{display:none;}
+    #navbar .search{display:none;}
+    #navbar .bar{height:56px;}
+    .user-chip .uname{display:none;}
+    .notif-panel{right:14px;left:14px;width:auto;top:56px;}
+  }
+  #mobilenav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(10,13,19,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line-solid);z-index:50;}
+  #mobilenav .row{display:flex;justify-content:space-around;padding:7px 0;}
+  #mobilenav a{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-faint);display:flex;flex-direction:column;align-items:center;gap:3px;}
+  #mobilenav a.active{color:var(--yellow);}
+  @media (max-width:820px){ #mobilenav{display:block;} body{padding-bottom:60px;} }
+
+  /* BUTTONS */
+  .btn{border-radius:4px;border:1px solid transparent;padding:12px 22px;font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-family:var(--mono);display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:all .12s ease;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--red);color:#fff;box-shadow:0 0 0 rgba(227,64,42,0);}
+  .btn-primary:hover{background:var(--red-dark);box-shadow:0 0 18px rgba(227,64,42,.45);}
+  .btn-secondary{background:transparent;color:var(--text);border-color:var(--line-solid);}
+  .btn-secondary:hover{border-color:var(--text-dim);background:var(--surface-2);}
+  .btn-trade{background:var(--teal);color:#04201c;}
+  .btn-trade:hover{background:var(--teal-dark);color:#fff;box-shadow:0 0 18px rgba(34,184,166,.4);}
+  .btn-ghost{background:transparent;color:var(--text-dim);border-color:var(--line-solid);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-dim);}
+  .btn-sm{padding:8px 14px;font-size:10.5px;}
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn-block{width:100%;}
+  .btn-danger-outline{background:transparent;color:var(--red);border-color:var(--red);}
+  .btn-danger-outline:hover{background:rgba(227,64,42,.1);}
+  .btn-fav{background:var(--surface);border:1px solid var(--line-solid);border-radius:4px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text-dim);flex-shrink:0;}
+  .btn-fav.active{color:var(--red);border-color:var(--red);}
+
+  /* HERO */
+  .hero{position:relative;overflow:hidden;padding:64px 0 68px;border-bottom:1px solid var(--line-solid);background:radial-gradient(ellipse 900px 500px at 15% 0%, rgba(76,141,255,.14), transparent 60%), radial-gradient(ellipse 700px 500px at 100% 20%, rgba(227,64,42,.12), transparent 55%);}
+  .hero-grid{position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;}
+  @media (max-width:900px){ .hero-grid{grid-template-columns:1fr;} }
+  .hero .eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+  .hero .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal-glow);}
+  .hero h1{font-size:38px;line-height:1.16;margin-bottom:14px;font-weight:800;letter-spacing:-.5px;}
+  .hero h1 .hl{color:var(--yellow);}
+  .hero p{color:var(--text-dim);font-size:14.5px;margin-bottom:22px;max-width:480px;line-height:1.6;}
+  .hero .actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px;}
+  .hero-stats{display:flex;gap:22px;flex-wrap:wrap;}
+  .hero-stat .val{font-family:var(--mono);font-size:20px;font-weight:bold;color:var(--text);}
+  .hero-stat .lbl{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono);margin-top:2px;}
+  .hero-panel{background:var(--surface);border:1px solid var(--line-solid);border-radius:8px;padding:18px;position:relative;}
+  .hero-panel:before{content:'FEATURED';position:absolute;top:-9px;left:16px;background:var(--bg);padding:0 8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--yellow);}
+  .hero-cards-row{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;}
+
+  .section{padding:44px 0;}
+  .section h2{font-size:19px;margin-bottom:4px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;}
+  .section .sub{color:var(--text-dim);font-size:12px;margin-bottom:20px;font-family:var(--mono);}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:16px;}
+  @media (max-width:600px){.grid{grid-template-columns:repeat(2,1fr);gap:10px;}}
+
+  /* CARD FACE — moldura tipo item de inventário/TCG */
+  .cardface{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:border-color .14s ease, box-shadow .14s ease, transform .14s ease;position:relative;}
+  .cardface:before{content:'';position:absolute;inset:0;border-radius:var(--radius-lg);padding:1px;pointer-events:none;opacity:0;transition:opacity .14s ease;background:linear-gradient(135deg,var(--teal),transparent 40%);-webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;}
+  .cardface:hover{border-color:var(--teal);box-shadow:0 6px 24px rgba(34,184,166,.15);transform:translateY(-3px);}
+  .cardface:hover:before{opacity:1;}
+  .cardface.rare-3:before{background:linear-gradient(135deg,var(--gold),transparent 50%);opacity:.6;}
+  .cardface.rare-3{border-color:#4a3f22;}
+  .cardface .art{aspect-ratio:.716/1;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#eef1f5,#d8dde5);border-bottom:1px solid var(--line-solid);overflow:hidden;padding:6px;}
+  .cardface .art:after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg, rgba(255,255,255,.025) 0 2px, transparent 2px 5px);pointer-events:none;}
+  .cardface .art .badge-type{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line-solid);z-index:2;}
+  .cardface .art .hp{position:absolute;top:10px;right:8px;color:var(--text);font-family:var(--mono);font-weight:bold;font-size:10.5px;background:rgba(10,13,19,.75);padding:2px 6px;border-radius:3px;border:1px solid var(--line-solid);z-index:2;}
+  .cardface .art img.card-real-image{width:100%;height:100%;object-fit:contain;display:block;border-radius:4px;position:relative;z-index:1;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18);}
+  .cardface .art svg.art-illustration{width:50%;height:50%;opacity:.95;filter:drop-shadow(0 0 10px rgba(34,184,166,.18));position:relative;z-index:1;}
+  .cardface .body{padding:11px 12px 12px;display:flex;flex-direction:column;gap:5px;flex:1;}
+  .cardface .name{font-family:var(--display);font-weight:800;font-size:13.5px;color:var(--text);letter-spacing:.1px;}
+  .cardface .meta-line{font-size:10px;color:var(--text-faint);font-family:var(--mono);}
+  .cardface .stars{color:var(--gold);font-size:10.5px;text-shadow:0 0 6px rgba(217,179,77,.4);}
+  .cardface .row{display:flex;justify-content:space-between;align-items:center;margin-top:auto;gap:6px;flex-wrap:wrap;}
+  .cardface .price{font-family:var(--mono);font-weight:bold;color:var(--text);font-size:14.5px;}
+  .tag{border:1px solid var(--line-solid);color:var(--text-dim);border-radius:3px;padding:2px 7px;font-size:9.5px;white-space:nowrap;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;}
+  .tag.venda{border-color:var(--red);color:var(--red-glow);}
+  .tag.trade{border-color:var(--teal);color:var(--teal-glow);}
+  .tag.filled{background:var(--surface-2);color:var(--gold);border:1px solid #3a3320;}
+  .tag-row{display:flex;gap:5px;flex-wrap:wrap;}
+  .variant-chip{display:inline-flex;align-items:center;margin-left:5px;padding:2px 5px;border-radius:3px;border:1px solid var(--teal);color:var(--teal);font:600 9px var(--mono);vertical-align:middle;text-transform:uppercase;letter-spacing:.04em;}
+.rarity-chip{font-family:var(--mono);font-size:9px;letter-spacing:.6px;text-transform:uppercase;padding:2px 6px;border-radius:3px;font-weight:700;}
+  .fav-corner{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:4px;background:rgba(10,13,19,.75);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-dim);border:1px solid var(--line-solid);z-index:2;}
+  .fav-corner.active{color:var(--red);border-color:var(--red);}
+  .cardface .pick{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:4px;background:var(--surface);border:1.5px solid var(--line-solid);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;z-index:2;}
+  .cardface.selected .pick{background:var(--teal);border-color:var(--teal);}
+  .cardface.selected{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal);}
+
+  /* FILTER PANEL */
+  .layout-filters{display:grid;grid-template-columns:240px 1fr;gap:24px;align-items:start;}
+  @media (max-width:820px){.layout-filters{grid-template-columns:1fr;}}
+  .filters{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:18px;position:relative;}
+  .filters:before{content:'';position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 5px var(--teal-glow);}
+  .seller-box{position:relative;}
+  .seller-box:before{content:'';position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);}
+  .filters h3{font-size:11px;margin-bottom:14px;font-weight:800;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);}
+  .filter-group{margin-bottom:16px;}
+  .filter-group .label{font-size:10.5px;font-weight:700;margin-bottom:7px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);}
+  .filter-group label{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;}
+  .filter-group select, .filter-group input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--line-solid);border-radius:4px;font-size:12px;background:var(--bg-soft);color:var(--text);font-family:var(--mono);}
+  .filter-group select:focus{outline:none;border-color:var(--teal);}
+  .active-filter-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .pill{background:var(--surface-2);border:1px solid var(--line-solid);border-radius:3px;padding:4px 8px;font-size:10.5px;color:var(--text-dim);display:flex;align-items:center;gap:6px;font-family:var(--mono);}
+  .pill button{border:none;background:none;color:var(--text-faint);font-size:12px;padding:0;line-height:1;}
+  .empty-state{text-align:center;padding:56px 20px;color:var(--text-dim);}
+  .empty-state h3{color:var(--text);margin-bottom:8px;font-size:15px;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* DETAIL PAGE — ficha estilo database */
+  .detail-grid{display:grid;grid-template-columns:400px 1fr;gap:36px;}
+  @media (max-width:820px){.detail-grid{grid-template-columns:1fr;}}
+  .detail-big-card{aspect-ratio:.716/1;border-radius:var(--radius-lg);overflow:hidden;position:relative;background:linear-gradient(145deg,#eef1f5,#d8dde5);border:1px solid var(--line-solid);display:flex;align-items:center;justify-content:center;padding:10px;}
+  .detail-big-card svg.art-illustration{width:42%;height:42%;opacity:.95;filter:drop-shadow(0 0 22px rgba(34,184,166,.22));}
+  .db-header{font-family:var(--mono);font-size:10.5px;letter-spacing:2px;color:var(--teal);text-transform:uppercase;margin-bottom:6px;}
+  .price-big{font-family:var(--mono);font-weight:bold;color:var(--text);font-size:27px;}
+  .spec-table{border-top:1px solid var(--line-solid);margin-top:14px;}
+  .display-panel{position:relative;border-radius:8px;padding:16px 18px;background:linear-gradient(160deg,rgba(79,141,255,.07),rgba(10,13,19,.4)),var(--surface);border:1px solid rgba(79,141,255,.28);box-shadow:inset 0 0 22px rgba(79,141,255,.05);}
+  .display-panel .dp-label{position:absolute;top:-8px;left:14px;background:var(--bg);padding:0 7px;font-family:var(--mono);font-size:9.5px;letter-spacing:1.8px;color:var(--blue);text-transform:uppercase;}
+  .display-panel .dp-led{position:absolute;top:10px;right:12px;width:6px;height:6px;border-radius:50%;}
+  .spec-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line-solid);font-size:12.5px;}
+  .spec-row .k{color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;font-size:10.5px;letter-spacing:.5px;}
+  .spec-row .v{color:var(--text);font-weight:600;}
+  .seller-box{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:15px;margin-top:16px;}
+  .seller-box .name{font-weight:bold;font-family:var(--mono);color:var(--text);}
+  .seller-box .meta{color:var(--text-dim);font-size:11.5px;margin-top:3px;}
+
+  /* FORMS */
+  .field{margin-bottom:15px;}
+  .field label{display:block;font-size:10.5px;font-weight:700;margin-bottom:6px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);}
+  .field input, .field select, .field textarea{width:100%;padding:10px 12px;border:1px solid var(--line-solid);border-radius:4px;font-size:13.5px;font-family:var(--sans);background:var(--bg-soft);color:var(--text);}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none;border-color:var(--teal);}
+  .field input.err, .field select.err, .field textarea.err{border-color:var(--red);background:rgba(227,64,42,.08);}
+  .err-msg{color:var(--red-glow);font-size:11.5px;margin-top:4px;display:none;}
+  .field.has-error .err-msg{display:block;}
+  .field .hint{font-size:11px;color:var(--text-faint);margin-top:4px;font-family:var(--mono);}
+  .radio-row{display:flex;gap:20px;flex-wrap:wrap;}
+  .radio-row label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:400;color:var(--text);}
+  .step-track{display:flex;gap:5px;margin-bottom:24px;}
+  .step-track .seg{flex:1;height:3px;border-radius:2px;background:var(--line-solid);}
+  .step-track .seg.done{background:var(--teal);}
+
+  /* CART */
+  .cart-item{display:flex;gap:14px;background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:13px;margin-bottom:12px;align-items:center;}
+  .cart-item .thumb{width:64px;height:64px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#0d1119;display:flex;align-items:center;justify-content:center;border:1px solid var(--line-solid);}
+  .cart-item .thumb svg{width:55%;height:55%;}
+  .qty-ctrl{display:flex;align-items:center;gap:10px;border:1px solid var(--line-solid);border-radius:4px;padding:3px 10px;width:fit-content;margin-top:6px;background:var(--bg-soft);}
+  .qty-ctrl button{border:none;background:none;font-size:15px;color:var(--text);width:18px;}
+  .summary-box{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:20px;}
+  .summary-row{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:9px;color:var(--text-dim);}
+  .summary-row.total{font-weight:bold;font-size:16px;color:var(--text);border-top:1px solid var(--line-solid);padding-top:11px;margin-top:5px;}
+  .summary-row.total .val{color:var(--yellow);font-family:var(--mono);}
+  .cep-row{display:flex;gap:8px;}
+  .cep-row input{flex:1;}
+
+  /* ORDER TRACKING — estilo HUD/missão */
+  .order-card{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:18px;margin-bottom:14px;}
+  .order-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .track{display:flex;align-items:center;margin:18px 0;}
+  .track .step{flex:1;text-align:center;position:relative;}
+  .track .dot{width:20px;height:20px;border-radius:50%;background:var(--bg-soft);border:2px solid var(--line-solid);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;}
+  .track .step.done .dot{background:var(--teal);border-color:var(--teal);box-shadow:0 0 8px rgba(34,184,166,.5);}
+  .track .step.current .dot{background:var(--yellow);border-color:var(--yellow);box-shadow:0 0 8px rgba(245,195,36,.5);}
+  .track .line{position:absolute;top:10px;left:-50%;width:100%;height:2px;background:var(--line-solid);z-index:-1;}
+  .track .step.done .line, .track .step.current .line{background:var(--teal);}
+  .track .step:first-child .line{display:none;}
+  .track .lbl{font-size:9px;color:var(--text-faint);font-family:var(--mono);text-transform:uppercase;letter-spacing:.3px;}
+  .track .step.done .lbl, .track .step.current .lbl{color:var(--text);font-weight:600;}
+
+  /* TRADES — comparação MEU ITEM ⇄ ITEM DESEJADO */
+  .trade-card{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;}
+  .trade-status{padding:3px 10px;border-radius:3px;font-size:9.5px;font-weight:700;color:#fff;display:inline-block;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+  .swap-layout{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .swap-icon{width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line-solid);display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:14px;flex-shrink:0;}
+  .swap-col .swap-label{font-size:9.5px;color:var(--text-faint);margin-bottom:6px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+
+  /* PROFILE — collector profile */
+  .profile-head{background:linear-gradient(180deg,var(--surface),var(--bg));padding:36px 0;border-bottom:1px solid var(--line-solid);}
+  .profile-head .row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+  .avatar-lg{width:64px;height:64px;border-radius:6px;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:22px;font-family:var(--display);flex-shrink:0;}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line-solid);margin:24px 0;flex-wrap:wrap;overflow-x:auto;}
+  .tabs button{background:none;border:1px solid transparent;padding:9px 13px;font-size:11px;color:var(--text-dim);border-radius:4px 4px 0 0;white-space:nowrap;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+  .tabs button.active{color:var(--yellow);border-color:var(--line-solid);border-bottom-color:var(--surface);background:var(--surface);}
+
+  /* ADMIN */
+  .admin-layout{display:grid;grid-template-columns:230px 1fr;min-height:70vh;}
+  @media (max-width:820px){.admin-layout{grid-template-columns:1fr;}}
+  .admin-side{background:var(--surface);border-right:1px solid var(--line-solid);padding:22px 12px;}
+  .admin-side .item{padding:10px 14px;border-radius:4px;font-size:11.5px;color:var(--text-dim);cursor:pointer;margin-bottom:3px;font-weight:600;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;}
+  .admin-side .item.active{background:var(--surface-2);color:var(--yellow);}
+  .admin-main{padding:26px;}
+  .kpi-row{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+  .kpi{background:var(--surface);border:1px solid var(--line-solid);border-radius:var(--radius-lg);padding:14px 18px;min-width:140px;}
+  .kpi .val{font-family:var(--mono);font-size:19px;font-weight:bold;color:var(--yellow);}
+  .kpi .lbl{color:var(--text-faint);font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table th{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line-solid);font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono);}
+  table td{padding:11px 8px;border-bottom:1px solid var(--line-solid);color:var(--text-dim);}
+  .badge{padding:3px 9px;border-radius:3px;font-size:10px;font-weight:700;color:#fff;display:inline-block;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line-solid);color:var(--text);padding:13px 20px;border-radius:6px;font-size:13px;font-family:var(--mono);z-index:200;box-shadow:0 12px 30px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  .toast.error{border-color:var(--red);color:var(--red-glow);}
+  .toast.success{border-color:var(--teal);color:var(--teal-glow);}
+  footer{background:var(--bg-soft);border-top:1px solid var(--line-solid);color:var(--text-dim);padding:32px 0;margin-top:36px;font-size:12px;}
+  footer .brand{color:var(--text);font-family:var(--display);font-weight:800;font-size:15px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;}
+  .breadcrumb{font-size:11.5px;color:var(--text-dim);margin-bottom:16px;cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;}
+  .breadcrumb:hover{color:var(--teal);}
+  .helper-note{background:rgba(217,179,77,.08);border:1px solid #4a3f22;border-radius:4px;padding:13px 15px;font-size:12px;color:var(--gold-glow);margin-bottom:18px;}
+  .auth-note{background:rgba(76,141,255,.08);border:1px solid #22335c;border-radius:4px;padding:12px 14px;font-size:11.5px;color:#9db8ee;margin-bottom:16px;}
+  .divider{height:1px;background:var(--line-solid);margin:18px 0;}
+  .empty-inline{color:var(--text-dim);font-size:13px;padding:20px 0;}
+  .credit{font-size:10px;color:var(--text-faint);opacity:.8;font-family:var(--mono);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(5,7,11,.72);backdrop-filter:blur(3px);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-box{background:var(--surface);border:1px solid var(--line-solid);border-radius:8px;padding:28px;max-width:360px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.5);}
+  .modal-icon{font-size:30px;margin-bottom:10px;}
+  .modal-box h3{font-size:17px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.3px;}
+  .modal-box p{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin-bottom:18px;}
+  .modal-actions{display:flex;flex-direction:column;gap:9px;}
+  .upload-box{width:130px;height:130px;border:1.5px dashed var(--line-solid);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-faint);font-size:11px;font-family:var(--mono);cursor:pointer;position:relative;overflow:hidden;background:var(--bg-soft);}
+  .upload-box:hover{border-color:var(--teal);color:var(--teal);}
+  .upload-box img{width:100%;height:100%;object-fit:cover;}
+  .upload-plus{font-size:26px;line-height:1;}
+  .upload-remove{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:4px;background:rgba(10,13,19,.85);border:1px solid var(--line-solid);color:#fff;font-size:11px;cursor:pointer;}
+  .chat-window{background:var(--surface);border:1px solid var(--line-solid);border-radius:8px;padding:16px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;margin-bottom:14px;}
+  .chat-msg{display:flex;gap:10px;align-items:flex-start;}
+  .chat-msg.self{flex-direction:row-reverse;text-align:right;}
+  .chat-avatar{width:28px;height:28px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line-solid);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:bold;color:var(--teal);flex-shrink:0;font-family:var(--mono);}
+  .chat-bubble{background:var(--bg-soft);border:1px solid var(--line-solid);border-radius:6px;padding:8px 12px;font-size:12.5px;color:var(--text);max-width:420px;display:inline-block;}
+  .chat-msg.self .chat-bubble{background:#123a34;border-color:var(--teal-dark);}
+  .chat-bubble strong{color:var(--teal);font-family:var(--mono);font-size:11px;}
+  .chat-time{font-size:9.5px;color:var(--text-faint);margin-top:3px;font-family:var(--mono);}
+  .chat-input-row{display:flex;gap:10px;}
+  .chat-input-row input{flex:1;padding:11px 14px;border:1px solid var(--line-solid);border-radius:4px;background:var(--bg-soft);color:var(--text);font-size:13px;}
+  .avatar-lg{position:relative;cursor:pointer;}
+  .avatar-edit-badge{position:absolute;bottom:-3px;right:-3px;width:20px;height:20px;border-radius:4px;background:var(--teal);color:#04201c;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--navy,#0F1420);}
+  .avatar-picker{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:16px;}
+  .avatar-picker-label{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:10px;}
+  .avatar-grid{display:flex;gap:10px;flex-wrap:wrap;}
+  .avatar-option{width:46px;height:46px;border-radius:6px;background:var(--surface);border:1.5px solid var(--line-solid);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .avatar-option:hover{border-color:var(--text-dim);}
+  .avatar-option.selected{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal);}
+  .dpad-row{display:flex;align-items:center;gap:14px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line-solid);}
+  .dpad{position:relative;width:78px;height:78px;flex-shrink:0;}
+  .dpad-btn{position:absolute;background:var(--bg-soft);border:1px solid var(--line-solid);color:var(--text-dim);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;transition:background .1s ease,color .1s ease;}
+  .dpad-btn:hover{background:var(--surface-2);color:var(--teal);}
+  .dpad-btn:active{background:var(--teal);color:#04201c;}
+  .dpad-up{top:0;left:26px;width:26px;height:24px;border-radius:4px 4px 0 0;}
+  .dpad-down{bottom:0;left:26px;width:26px;height:24px;border-radius:0 0 4px 4px;}
+  .dpad-left{left:0;top:27px;width:24px;height:26px;border-radius:4px 0 0 4px;}
+  .dpad-right{right:0;top:27px;width:24px;height:26px;border-radius:0 4px 4px 0;}
+  .dpad-center{top:24px;left:24px;width:30px;height:30px;border-radius:50%;background:var(--surface-2);color:var(--yellow);font-size:9px;}
+  .dpad-hint{font-family:var(--mono);font-size:10px;color:var(--text-faint);line-height:1.5;}
+  .explore-pager{display:flex;align-items:center;gap:14px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line-solid);}
+  .dpad-sm{width:66px;height:66px;}
+  .dpad-sm .dpad-up, .dpad-sm .dpad-down{left:22px;width:22px;height:20px;}
+  .dpad-sm .dpad-left, .dpad-sm .dpad-right{top:23px;width:20px;height:22px;}
+  .dpad-sm .dpad-center{top:20px;left:20px;width:26px;height:26px;}
+  @media (max-width:600px){ .track .lbl{font-size:8px;} .track .dot{width:16px;height:16px;} }
+  @media (max-width:600px){
+    .chat-window{max-height:320px;padding:12px;}
+    .chat-bubble{max-width:230px;font-size:12px;}
+    .chat-input-row{flex-direction:column;}
+    .chat-input-row .btn{width:100%;}
+    .avatar-option{width:40px;height:40px;}
+    .dpad{width:64px;height:64px;}
+    .dpad-up,.dpad-down{left:21px;width:22px;height:20px;}
+    .dpad-left,.dpad-right{top:22px;width:20px;height:20px;}
+    .dpad-center{top:19px;left:19px;width:26px;height:26px;}
+    .dpad-row{flex-direction:column;align-items:flex-start;gap:8px;}
+    .hero-cards-row{grid-template-columns:1fr;}
+    .explore-pager{flex-wrap:wrap;}
+  }
+  @media (max-width:480px){
+    .modal-box{padding:22px;}
+    .upload-box{width:110px;height:110px;}
+  }
+</style>
+</head>
+<body>
+<div id="topstrip"></div>
+<div id="navbar"></div>
+<div id="app"></div>
+<div id="mobilenav"></div>
+<div id="toast" class="toast"></div>
+<div id="modal-root"></div>
+<script>
+/* =====================================================
+   POKÉTRADE — aplicação web
+   Dados centralizados + persistência em localStorage
+===================================================== */
+const DB_KEY = "poketrade_db_v5";
+
+/* ---------------- TIPOS POKÉMON (os 18 tipos oficiais) ---------------- */
+const TYPE_COLORS = {
+  normal:   {fill:"#B8C0D4"}, fogo:     {fill:"#FF6B4A"}, agua:     {fill:"#3FA9F5"},
+  grama:    {fill:"#4CD98A"}, eletrico: {fill:"#FFD23F"}, gelo:     {fill:"#7DE0E6"},
+  lutador:  {fill:"#E0654A"}, venenoso: {fill:"#B36FD6"}, terrestre:{fill:"#D9B36B"},
+  voador:   {fill:"#9AB6F5"}, psiquico: {fill:"#F76BB0"}, inseto:   {fill:"#A8D94C"},
+  pedra:    {fill:"#C2A66B"}, fantasma: {fill:"#8E7FE0"}, dragao:   {fill:"#6E8CF0"},
+  sombrio:  {fill:"#9096A6"}, aco:      {fill:"#B9C4CE"}, fada:     {fill:"#F5A8D0"},
+};
+const TYPE_LABEL = {
+  normal:"Normal", fogo:"Fogo", agua:"Água", grama:"Grama", eletrico:"Elétrico", gelo:"Gelo",
+  lutador:"Lutador", venenoso:"Venenoso", terrestre:"Terrestre", voador:"Voador", psiquico:"Psíquico",
+  inseto:"Inseto", pedra:"Pedra", fantasma:"Fantasma", dragao:"Dragão", sombrio:"Sombrio",
+  aco:"Aço", fada:"Fada",
+};
+const TYPE_ORDER = Object.keys(TYPE_LABEL);
+const COND_LABEL = {nova:"Nova", quasenova:"Quase nova", jogada:"Jogada", danificada:"Danificada"};
+const COND_ORDER = Object.keys(COND_LABEL);
+const RARITY_TIERS = {
+  1:{label:"Comum", color:"#9AA6BE"},
+  2:{label:"Incomum", color:"#4CD98A"},
+  3:{label:"Rara", color:"#3FA9F5"},
+  4:{label:"Ultra Rara", color:"#D9B34D"},
+};
+
+/* Fallback visual para casos em que uma imagem externa não esteja disponível. */
+function creatureSVG(type){
+  const c = TYPE_COLORS[type]||TYPE_COLORS.normal;
+  return `<svg class="art-illustration" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <g fill="${c.fill}" opacity="0.92">
+      <path d="M36 78 C30 55 46 32 60 32 C74 32 90 55 84 78 C80 94 40 94 36 78 Z"/>
+      <path d="M45 34 L39 15 L54 30 Z"/>
+      <path d="M75 34 L81 15 L66 30 Z"/>
+    </g>
+    <circle cx="52" cy="70" r="3.6" fill="#0A0D13"/>
+    <circle cx="68" cy="70" r="3.6" fill="#0A0D13"/>
+  </svg>`;
+}
+function cardArtHTML(c){
+  const realImagem = c.imagem || REAL_CARD_IMAGES[c.name] || REAL_CARD_IMAGES[c.pokemon] || "";
+  if(realImagem){
+    return `<img src="${realImagem}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.parentElement.classList.add('image-fallback');this.parentElement.insertAdjacentHTML('beforeend', creatureSVG('${c.type}'));" class="card-real-image" style="width:100%;height:100%;object-fit:contain;position:relative;z-index:1;">`;
+  }
+  return creatureSVG(c.type);
+}
+/* Glifos visuais dos tipos. */
+function typeGlyphPath(type){
+  const shapes = {
+    normal:   `<circle cx="12" cy="12" r="6"/>`,
+    fogo:     `<path d="M12 4c4 4 4 7 1 9 1-3-1-4-2-4 0 2-2 3-2 5 0 3 2 5 3 5-4 0-7-3-7-7 0-4 3-6 7-8z"/>`,
+    agua:     `<path d="M12 4c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>`,
+    grama:    `<path d="M6 18C6 9 12 5 18 5c0 8-4 13-12 13z"/><line x1="6" y1="19" x2="16" y2="7" stroke="#0A0D13" stroke-width="1.2"/>`,
+    eletrico: `<path d="M13 3 5 13h5l-1 8 8-11h-5l1-7z"/>`,
+    gelo:     `<g stroke="currentColor" stroke-width="1.6"><line x1="12" y1="3" x2="12" y2="21"/><line x1="4" y1="7" x2="20" y2="17"/><line x1="4" y1="17" x2="20" y2="7"/></g>`,
+    lutador:  `<path d="M12 3 20 9v8l-8 4-8-4V9z"/>`,
+    venenoso: `<path d="M12 3c4 3 6 6 6 9a6 6 0 1 1-12 0c0-3 2-6 6-9z"/><circle cx="12" cy="14" r="1.6" fill="#0A0D13"/>`,
+    terrestre:`<path d="M3 18 9 6l4 6 2-3 6 9z"/>`,
+    voador:   `<path d="M2 13c4-6 8-8 10-8-2 3-2 6 0 8-2 0-6-1-10 0z"/><path d="M22 13c-4-6-8-8-10-8 2 3 2 6 0 8 2 0 6-1 10 0z"/>`,
+    psiquico: `<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.4"/>`,
+    inseto:   `<polygon points="12,3 19,8 16,20 8,20 5,8"/>`,
+    pedra:    `<polygon points="4,16 8,6 14,4 20,10 18,18 8,20"/>`,
+    fantasma: `<path d="M6 20V11a6 6 0 0 1 12 0v9l-2.5-2-2 2-1.5-1.5-1.5 1.5-2-2z"/>`,
+    dragao:   `<path d="M3 17c3-8 8-13 13-14-1 3-3 4-3 7 3 0 6 1 8 4-4 0-7 0-9 2-1 2-1 4 0 6-4-1-7-3-9-5z"/>`,
+    sombrio:  `<path d="M15 3a9 9 0 1 0 6 15 9 9 0 0 1-6-15z"/>`,
+    aco:      `<polygon points="12,3 20,8 20,16 12,21 4,16 4,8" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3"/>`,
+    fada:     `<path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/>`,
+  };
+  return shapes[type] || shapes.normal;
+}
+function typeBadgeSVG(type, size){
+  const c = TYPE_COLORS[type]||TYPE_COLORS.normal;
+  const s = size||14;
+  return `<div class="badge-type" style="box-shadow:inset 0 0 0 1px ${c.fill}55;" title="${TYPE_LABEL[type]}">
+    <svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c.fill}" style="color:${c.fill}">${typeGlyphPath(type)}</svg>
+  </div>`;
+}
+
+/* ---------------- CATÁLOGO BASE (fixo, não editável pelo usuário) ----------------
+   Estrutura de dados por carta: id, name (nome de impressão), pokemon (espécie),
+   type, hp, rarity, edition (coleção), num, condCode, avail, price, tradefor,
+   seller/sellerName/rating (vendedor), imagem e referência da carta. */
+const SELLERS = [
+  {seller:"ashketchum_rj", sellerName:"Ash Ketchum", rating:312},
+  {seller:"mistywater", sellerName:"Misty Water", rating:188},
+  {seller:"brockrocha", sellerName:"Brock Rocha", rating:241},
+  {seller:"giovannirj", sellerName:"Giovanni Reis", rating:156},
+  {seller:"erikapkmn", sellerName:"Erika Fujimoto", rating:97},
+];
+const EDITIONS = ["Escarlate e Violeta","Paldea Evoluída","Destinos de Paldea","151","Chama Obsidiana",
+  "Fenda Paradoxal","Base Set Reimpressa","Estrelas Brilhantes","Astro Radiante","Reino Coroado","Lendas Cintilantes"];
+const AVAIL_CYCLE = ["venda","venda","ambos","troca","venda","ambos"];
+/* Referências visuais de cartas reais do Pokémon TCG. As imagens são carregadas
+   diretamente do catálogo público de imagens para manter a correspondência entre carta e espécie. */
+const REAL_CARD_IMAGES = {
+  Bulbasaur:"https://images.pokemontcg.io/sv3pt5/1_hires.png",
+  Ivysaur:"https://images.pokemontcg.io/sv3pt5/2_hires.png",
+  "Venusaur ex":"https://images.pokemontcg.io/sv3pt5/3_hires.png",
+  Charmander:"https://images.pokemontcg.io/sv3pt5/4_hires.png",
+  Charmeleon:"https://images.pokemontcg.io/sv3pt5/5_hires.png",
+  "Charizard ex":"https://images.pokemontcg.io/sv3pt5/6_hires.png",
+  Squirtle:"https://images.pokemontcg.io/sv3pt5/7_hires.png",
+  Wartortle:"https://images.pokemontcg.io/sv3pt5/8_hires.png",
+  "Blastoise ex":"https://images.pokemontcg.io/sv3pt5/9_hires.png",
+  Pikachu:"https://images.pokemontcg.io/sv3pt5/25_hires.png",
+  Raichu:"https://images.pokemontcg.io/sv3pt5/26_hires.png",
+  Eevee:"https://images.pokemontcg.io/sv3pt5/133_hires.png",
+  Vaporeon:"https://images.pokemontcg.io/sv3pt5/134_hires.png",
+  Jolteon:"https://images.pokemontcg.io/sv3pt5/135_hires.png",
+  Flareon:"https://images.pokemontcg.io/sv3pt5/136_hires.png",
+  Snorlax:"https://images.pokemontcg.io/sv3pt5/143_hires.png",
+  Gengar:"https://images.pokemontcg.io/sv3pt5/94_hires.png",
+  "Alakazam ex":"https://images.pokemontcg.io/sv3pt5/65_hires.png",
+  Machamp:"https://images.pokemontcg.io/sv3pt5/68_hires.png",
+  "Golem ex":"https://images.pokemontcg.io/sv3pt5/76_hires.png",
+  Muk:"https://images.pokemontcg.io/sv3pt5/89_hires.png",
+  Sandslash:"https://images.pokemontcg.io/sv3pt5/28_hires.png",
+  Pidgeot:"https://images.pokemontcg.io/sv3pt5/18_hires.png",
+  Scyther:"https://images.pokemontcg.io/sv3pt5/123_hires.png",
+  Dragonite:"https://images.pokemontcg.io/sv3pt5/149_hires.png",
+  Mewtwo:"https://images.pokemontcg.io/sv3pt5/150_hires.png",
+  "Mew ex":"https://images.pokemontcg.io/sv3pt5/151_hires.png",
+  "Ninetales ex":"https://images.pokemontcg.io/sv3pt5/38_hires.png",
+  Articuno:"https://images.pokemontcg.io/sv3pt5/144_hires.png",
+  Zapdos:"https://images.pokemontcg.io/sv3pt5/145_hires.png",
+  Gyarados:"https://images.pokemontcg.io/sv3pt5/130_hires.png",
+  Clefable:"https://images.pokemontcg.io/sv3pt5/36_hires.png",
+  Vileplume:"https://images.pokemontcg.io/sv3pt5/45_hires.png",
+  Beedrill:"https://images.pokemontcg.io/sv3pt5/15_hires.png",
+  "Arbok ex":"https://images.pokemontcg.io/sv3pt5/24_hires.png",
+  "Wigglytuff ex":"https://images.pokemontcg.io/sv3pt5/40_hires.png",
+  Starmie:"https://images.pokemontcg.io/sv3pt5/121_hires.png",
+  Lapras:"https://images.pokemontcg.io/sv3pt5/131_hires.png",
+  Ditto:"https://images.pokemontcg.io/sv3pt5/132_hires.png",
+  "Jynx ex":"https://images.pokemontcg.io/sv3pt5/124_hires.png",
+  "Kangaskhan ex":"https://images.pokemontcg.io/sv3pt5/115_hires.png",
+  "Mr. Mime":"https://images.pokemontcg.io/sv3pt5/122_hires.png",
+  Marowak:"https://images.pokemontcg.io/sv3pt5/105_hires.png",
+  Electrode:"https://images.pokemontcg.io/sv3pt5/101_hires.png",
+  Weezing:"https://images.pokemontcg.io/sv3pt5/110_hires.png",
+  Moltres:"https://images.pokemontcg.io/sv3pt5/146_hires.png",
+  Dragonair:"https://images.pokemontcg.io/sv3pt5/148_hires.png",
+  Aerodactyl:"https://images.pokemontcg.io/sv3pt5/142_hires.png",
+  Kabutops:"https://images.pokemontcg.io/sv3pt5/141_hires.png",
+  Omastar:"https://images.pokemontcg.io/sv3pt5/139_hires.png",
+  "Alakazam ex · 201":"https://images.pokemontcg.io/sv3pt5/201_hires.png",
+  "Pikachu · 173":"https://images.pokemontcg.io/sv3pt5/173_hires.png",
+  "Dragonair · 181":"https://images.pokemontcg.io/sv3pt5/181_hires.png",
+  "Venusaur ex · 198":"https://images.pokemontcg.io/sv3pt5/198_hires.png",
+  "Charizard ex · 199":"https://images.pokemontcg.io/sv3pt5/199_hires.png",
+  "Blastoise ex · 184":"https://images.pokemontcg.io/sv3pt5/184_hires.png",
+  "Gardevoir ex":"https://images.pokemontcg.io/sv1/245_hires.png",
+  "Espeon VMAX":"https://images.pokemontcg.io/swsh7/65_hires.png",
+  "Sylveon VMAX":"https://images.pokemontcg.io/swsh7/75_hires.png",
+  "Pikachu VMAX":"https://images.pokemontcg.io/swsh4/188_hires.png",
+  "Rayquaza VMAX":"https://images.pokemontcg.io/swsh7/218_hires.png",
+  "Lugia VSTAR":"https://images.pokemontcg.io/swsh12/202_hires.png",
+  "Jolteon-GX":"https://images.pokemontcg.io/smp/SM173_hires.png",
+  "Steelix V":"https://images.pokemontcg.io/swsh4/115_hires.png",
+  "Mega Absol ex":"https://images.pokemontcg.io/me1/161_hires.png"
+};
+const REAL_CARD_EDITIONS = {
+  Bulbasaur:"151", Ivysaur:"151", "Venusaur ex":"151", Charmander:"151", Charmeleon:"151", "Charizard ex":"151",
+  Squirtle:"151", Wartortle:"151", "Blastoise ex":"151", Pikachu:"151", Raichu:"151", Eevee:"151",
+  Vaporeon:"151", Jolteon:"151", Flareon:"151", Snorlax:"151", Gengar:"151", "Alakazam ex":"151", Machamp:"151",
+  "Golem ex":"151", Muk:"151", Sandslash:"151", Pidgeot:"151", Scyther:"151", Dragonite:"151", Mewtwo:"151",
+  "Mew ex":"151", "Ninetales ex":"151", Articuno:"151", Zapdos:"151", Gyarados:"151", Clefable:"151",
+  Vileplume:"151", Beedrill:"151", "Arbok ex":"151", "Wigglytuff ex":"151", Starmie:"151", Lapras:"151", Ditto:"151",
+  "Jynx ex":"151", "Kangaskhan ex":"151", "Mr. Mime":"151", Marowak:"151", Electrode:"151", Weezing:"151", Moltres:"151",
+  Dragonair:"151", Aerodactyl:"151", Kabutops:"151", Omastar:"151", "Alakazam ex · 201":"151", "Charizard ex · 199":"151",
+  "Blastoise ex · 184":"151",
+  "Pikachu · 173":"151", "Dragonair · 181":"151", "Venusaur ex · 198":"151", "Gardevoir ex":"Escarlate e Violeta", "Espeon VMAX":"Céus em Evolução", "Sylveon VMAX":"Céus em Evolução",
+  "Pikachu VMAX":"Voltagem Vívida", "Rayquaza VMAX":"Céus em Evolução", "Lugia VSTAR":"Tempestade Prateada", "Jolteon-GX":"Promo SM", "Steelix V":"Voltagem Vívida", "Mega Absol ex":"Mega Evolution"
+};
+
+// [nome exibido, nome-base, tipo, id de imagem] — catálogo com cartas reais do Pokémon TCG.
+const POKEMON_ROSTER = [
+  ["Bulbasaur","Bulbasaur","grama","sv3pt5-1",1], ["Ivysaur","Ivysaur","grama","sv3pt5-2",2], ["Venusaur ex","Venusaur ex","grama","sv3pt5-3",4],
+  ["Charmander","Charmander","fogo","sv3pt5-4",1], ["Charmeleon","Charmeleon","fogo","sv3pt5-5",2], ["Charizard ex","Charizard ex","fogo","sv3pt5-6",4],
+  ["Squirtle","Squirtle","agua","sv3pt5-7",1], ["Wartortle","Wartortle","agua","sv3pt5-8",2], ["Blastoise ex","Blastoise ex","agua","sv3pt5-9",4],
+  ["Pikachu","Pikachu","eletrico","sv3pt5-25",1], ["Raichu","Raichu","eletrico","sv3pt5-26",3], ["Eevee","Eevee","normal","sv3pt5-133",1],
+  ["Vaporeon","Vaporeon","agua","sv3pt5-134",3], ["Jolteon","Jolteon","eletrico","sv3pt5-135",3], ["Flareon","Flareon","fogo","sv3pt5-136",3],
+  ["Snorlax","Snorlax","normal","sv3pt5-143",2], ["Gengar","Gengar","fantasma","sv3pt5-94",3], ["Alakazam ex","Alakazam ex","psiquico","sv3pt5-65",3],
+  ["Machamp","Machamp","lutador","sv3pt5-68",2], ["Golem ex","Golem ex","lutador","sv3pt5-76",3], ["Muk","Muk","venenoso","sv3pt5-89",2],
+  ["Sandslash","Sandslash","terrestre","sv3pt5-28",2], ["Pikachu · 173","Pikachu","eletrico","sv3pt5-173",4], ["Scyther","Scyther","inseto","sv3pt5-123",2],
+  ["Dragonite","Dragonite","dragao","sv3pt5-149",4], ["Mewtwo","Mewtwo","psiquico","sv3pt5-150",4], ["Mew ex","Mew ex","psiquico","sv3pt5-151",4],
+  ["Ninetales ex","Ninetales ex","fogo","sv3pt5-38",3], ["Articuno","Articuno","gelo","sv3pt5-144",3], ["Zapdos","Zapdos","eletrico","sv3pt5-145",3],
+  ["Gyarados","Gyarados","agua","sv3pt5-130",3], ["Dragonair · 181","Dragonair","dragao","sv3pt5-181",4], ["Vileplume","Vileplume","grama","sv3pt5-45",3],
+  ["Beedrill","Beedrill","inseto","sv3pt5-15",3], ["Arbok ex","Arbok ex","venenoso","sv3pt5-24",3], ["Wigglytuff ex","Wigglytuff ex","fada","sv3pt5-40",3],
+  ["Starmie","Starmie","agua","sv3pt5-121",2], ["Lapras","Lapras","agua","sv3pt5-131",2], ["Venusaur ex · 198","Venusaur ex","grama","sv3pt5-198",4],
+  ["Jynx ex","Jynx ex","psiquico","sv3pt5-124",3], ["Kangaskhan ex","Kangaskhan ex","normal","sv3pt5-115",3], ["Mr. Mime","Mr. Mime","psiquico","sv3pt5-122",2],
+  ["Marowak","Marowak","terrestre","sv3pt5-105",3], ["Electrode","Electrode","eletrico","sv3pt5-101",3], ["Weezing","Weezing","venenoso","sv3pt5-110",3],
+  ["Moltres","Moltres","fogo","sv3pt5-146",3], ["Dragonair","Dragonair","dragao","sv3pt5-148",2], ["Aerodactyl","Aerodactyl","pedra","sv3pt5-142",3],
+  ["Kabutops","Kabutops","pedra","sv3pt5-141",3], ["Steelix V","Steelix V","aco","swsh4-115",3], ["Alakazam ex · 201","Alakazam ex","psiquico","sv3pt5-201",4],
+  ["Charizard ex · 199","Charizard ex","fogo","sv3pt5-199",4], ["Blastoise ex · 184","Blastoise ex","agua","sv3pt5-184",4], ["Gardevoir ex","Gardevoir ex","psiquico","sv1-245",4],
+  ["Espeon VMAX","Espeon VMAX","psiquico","swsh7-65",4], ["Sylveon VMAX","Sylveon VMAX","fada","swsh7-75",4], ["Pikachu VMAX","Pikachu VMAX","eletrico","swsh4-188",4],
+  ["Rayquaza VMAX","Rayquaza VMAX","dragao","swsh7-218",4], ["Lugia VSTAR","Lugia VSTAR","psiquico","swsh12-202",4], ["Jolteon-GX","Jolteon-GX","eletrico","smp-SM173",3], ["Mega Absol ex","Mega Absol ex","sombrio","me1-161",4]
+];
+function buildCatalog(){
+  return POKEMON_ROSTER.map((row, i) => {
+    const [displayName, pokemon, type, imageKey, rarity] = row;
+    const s = SELLERS[i % SELLERS.length];
+    const condCode = COND_ORDER[i % COND_ORDER.length];
+    const avail = AVAIL_CYCLE[i % AVAIL_CYCLE.length];
+    const edition = REAL_CARD_EDITIONS[displayName] || EDITIONS[i % EDITIONS.length];
+    const basePrice = [0,60,110,220,420][rarity] || 90;
+    const price = basePrice + ((i*37) % 80);
+    return {
+      id: i+1, name: displayName, pokemon, type, rarity,
+      hp: 60 + rarity*40 + (i%5)*8, edition, num: imageKey.split('-').pop(),
+      condCode, avail, price: (avail === "troca") ? null : price,
+      tradefor: (avail === "troca" || avail === "ambos") ? `Cartas do tipo ${TYPE_LABEL[TYPE_ORDER[(i+4)%TYPE_ORDER.length]].toLowerCase()}, ${COND_LABEL[condCode].toLowerCase()} ou melhor` : null,
+      seller: s.seller, sellerName: s.sellerName, rating: s.rating,
+      imagem: REAL_CARD_IMAGES[displayName] || REAL_CARD_IMAGES[pokemon] || "",
+      imagemFonte: (REAL_CARD_IMAGES[displayName] || REAL_CARD_IMAGES[pokemon]) ? "Pokémon TCG" : "",
+      cardRef: imageKey
+    };
+  });
+}
+const CATALOG = buildCatalog();
+const MY_CARDS_POOL = [
+  {id:101,name:"Snorlax ex",pokemon:"Snorlax",hp:290,type:"normal",rarity:2},
+  {id:102,name:"Vaporeon VSTAR",pokemon:"Vaporeon",hp:270,type:"agua",rarity:3},
+  {id:103,name:"Jolteon GX",pokemon:"Jolteon",hp:250,type:"eletrico",rarity:3},
+  {id:104,name:"Flareon ex",pokemon:"Flareon",hp:280,type:"fogo",rarity:2},
+  {id:105,name:"Espeon VMAX",pokemon:"Espeon",hp:300,type:"psiquico",rarity:3},
+  {id:106,name:"Leafeon ex",pokemon:"Leafeon",hp:260,type:"grama",rarity:2},
+  {id:107,name:"Umbreon VSTAR",pokemon:"Umbreon",hp:270,type:"sombrio",rarity:3},
+  {id:108,name:"Glaceon ex",pokemon:"Glaceon",hp:260,type:"gelo",rarity:2},
+  {id:109,name:"Sylveon VMAX",pokemon:"Sylveon",hp:290,type:"fada",rarity:4},
+  {id:110,name:"Absol GX",pokemon:"Absol",hp:230,type:"sombrio",rarity:2},
+];
+
+/* ---------------- PERSISTÊNCIA (localStorage) ---------------- */
+function seedDB(){
+  return {
+    users: [
+      {name:"Ash Ketchum", email:"ash@email.com", password:"pikachu123", handle:"ashketchum_rj", avatar:"eletrico"},
+    ],
+    currentUserEmail: null,
+    myCards: [],           // cartas publicadas pelo usuário (entram no catálogo de busca)
+    favorites: [],          // ids de cartas favoritadas
+    recentlyViewed: [],     // ids, mais recente primeiro
+    cart: [],                // [{id, qty}]
+    orders: [],              // pedidos simulados
+    trades: [
+      {
+        id: "TR-1001", direction:"recebida", withHandle:"mistywater", withName:"Misty Water",
+        targetCard: {id:2, name:"Blastoise ex", type:"agua", hp:310, rarity:2},
+        offeredCards: [{id:201, name:"Lapras VSTAR", type:"agua", hp:270, rarity:2}],
+        message:"Topo trocar minha Lapras pela sua Blastoise, ambas NM!",
+        status:"aguardando", createdAt: Date.now() - 86400000*2,
+      },
+      {
+        id: "TR-1002", direction:"recebida", withHandle:"giovannirj", withName:"Giovanni Reis",
+        targetCard: {id:4, name:"Pikachu VMAX", type:"eletrico", hp:280, rarity:2},
+        offeredCards: [{id:202, name:"Zeraora VMAX", type:"eletrico", hp:290, rarity:2}],
+        message:"Aceita trocar pela minha Zeraora VMAX?",
+        status:"aguardando", createdAt: Date.now() - 86400000,
+      },
+    ],
+    orderSeq: 1000,
+    notifications: [
+      {id:"N-1", text:"Nova proposta de troca recebida de @mistywater", date: Date.now()-86400000*2, read:false, type:"trade"},
+      {id:"N-2", text:"Nova proposta de troca recebida de @giovannirj", date: Date.now()-86400000, read:false, type:"trade"},
+    ],
+    notifSeq: 2,
+    chat: {
+      br: [
+        {from:"mistywater", text:"Alguém tem uma Blastoise ex pra trocar por uma Vaporeon VSTAR NM?", date: Date.now()-3600000*5},
+        {from:"brockrocha", text:"Acabei de publicar uma Machamp ex, condição muito boa. Dá uma olhada!", date: Date.now()-3600000*3},
+        {from:"giovannirj", text:"Alguém já usou o cálculo de frete daqui? Achei bem rápido.", date: Date.now()-3600000*1.2},
+      ],
+      global: [
+        {from:"ash_trainer_us", text:"Looking for a Charizard ex in NM condition, anyone selling?", date: Date.now()-3600000*6},
+        {from:"pkmn_kanto", text:"Just completed my Eeveelution collection here, great marketplace!", date: Date.now()-3600000*2},
+      ],
+    },
+    chatSeq: 0,
+  };
+}
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(!raw) throw new Error("empty");
+    const parsed = JSON.parse(raw);
+    if(!parsed.users) throw new Error("invalid");
+    if(!parsed.notifications) parsed.notifications = [];
+    if(typeof parsed.notifSeq !== "number") parsed.notifSeq = parsed.notifications.length;
+    if(!parsed.chat) parsed.chat = {br:[], global:[]};
+    if(typeof parsed.chatSeq !== "number") parsed.chatSeq = 0;
+    return parsed;
+  }catch(e){
+    const fresh = seedDB();
+    saveDB(fresh);
+    return fresh;
+  }
+}
+function saveDB(db){
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+window.db = loadDB();
+function persist(){ saveDB(db); }
+function addNotification(text, type){
+  db.notifSeq++;
+  db.notifications.unshift({id:"N-"+db.notifSeq, text, date:Date.now(), read:false, type:type||"info"});
+  db.notifications = db.notifications.slice(0,30);
+  persist();
+}
+
+function allCards(){ return CATALOG.concat(db.myCards); }
+function findCard(id){ return allCards().find(c=>c.id===id); }
+function currentUser(){ return db.users.find(u=>u.email===db.currentUserEmail) || null; }
+function isLoggedIn(){ return !!db.currentUserEmail; }
+
+/* ---------------- ESTADO DE NAVEGAÇÃO (não persistido) ---------------- */
+window.state = {
+  view: "home",
+  selectedCardId: null,
+  tradeTargetId: null,
+  tradeOffered: new Set(),
+  counterTradeId: null,      // id da trade recebida em contraproposta
+  search: "",
+  filters: {type:"", avail:"", cond:"", edition:"", rarity:"", maxPrice: null},
+  explorePage: 0,
+  adminTab: "geral",
+  profileTab: "venda",
+  publishStep: 1,
+  publishData: {},
+  redirectAfterLogin: null,
+  authPromptOpen: false,
+  pendingAction: null,
+  showAvatarPicker: false,
+  featuredIndex: 0,
+  authMode: "login",        // login | cadastro | recuperar
+  _cadForm: {},
+  lastOrderId: null,
+  showNotifPanel: false,
+  sortBy: "relevancia",
+};
+
+function go(view, params){
+  state.view = view;
+  if(params) Object.assign(state, params);
+  window.scrollTo(0,0);
+  render();
+}
+function requireLogin(nextView, nextParams){
+  if(isLoggedIn()){ go(nextView, nextParams); return true; }
+  state.authPromptOpen = true;
+  state.pendingAction = {view: nextView, params: nextParams||{}};
+  render();
+  return false;
+}
+function authPromptHtml(){
+  if(!state.authPromptOpen) return "";
+  return `<div class="modal-overlay" id="auth-modal-overlay">
+    <div class="modal-box">
+      <div class="modal-icon">👤</div>
+      <h3>Entre para continuar</h3>
+      <p>Crie uma conta ou entre na sua para publicar, favoritar, comprar e propor trocas na PokéTrade.</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary btn-block" id="authmodal-signup">Criar conta</button>
+        <button class="btn btn-secondary btn-block" id="authmodal-login">Entrar</button>
+        <button class="btn btn-ghost btn-block" id="authmodal-cancel">Agora não</button>
+      </div>
+    </div>
+  </div>`;
+}
+function toast(msg, kind){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (kind?(" "+kind):"");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>{ t.classList.remove("show"); }, 3000);
+}
+function fmtPrice(v){ return "R$ " + Number(v).toFixed(2).replace(".", ","); }
+function displayPanel(label, innerHtml, ledColor){
+  const led = ledColor || "var(--teal)";
+  return `<div class="display-panel"><div class="dp-label">${esc(label)}</div><div class="dp-led" style="background:${led};box-shadow:0 0 5px ${led};"></div>${innerHtml}</div>`;
+}
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString("pt-BR");
+}
+function esc(s){ return String(s).replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* Frete simulado a partir do CEP — sem API real, apenas uma função determinística */
+function calcFrete(cep){
+  const digits = (cep||"").replace(/\D/g,"");
+  if(digits.length < 8) return null;
+  let sum = 0;
+  for(const ch of digits) sum += Number(ch);
+  const valor = 12.9 + (sum % 9) * 3.4;
+  const prazo = 3 + (sum % 6);
+  return { valor: Math.round(valor*100)/100, prazo };
+}
+
+/* ---------------- CARD FACE COMPONENT ---------------- */
+function availTags(c){
+  let tags = "";
+  if(c.avail === "venda" || c.avail === "ambos") tags += `<span class="tag venda">à venda</span>`;
+  if(c.avail === "troca" || c.avail === "ambos") tags += `<span class="tag trade">troca</span>`;
+  return `<span class="tag-row">${tags}</span>`;
+}
+function cardVariant(c){
+  const n = String(c.name||"");
+  if(/Mega/i.test(n)) return "Mega Evolution";
+  if(/VMAX/i.test(n)) return "VMAX";
+  if(/VSTAR/i.test(n)) return "VSTAR";
+  if(/-?GX/i.test(n)) return "GX";
+  if(/\bex\b/i.test(n)) return "ex";
+  if(/\bV\b/i.test(n)) return "V";
+  return "";
+}
+function cardFace(c, opts={}){
+  const {pickable=false, picked=false, showFav=true} = opts;
+  const isFav = db.favorites.includes(c.id);
+  const hasRealArt = !!(c.imagem || REAL_CARD_IMAGES[c.name] || REAL_CARD_IMAGES[c.pokemon]);
+  const priceHtml = c.price ? `<span class="price">${fmtPrice(c.price)}</span>` : `<span></span>`;
+  const tier = RARITY_TIERS[c.rarity] || RARITY_TIERS[1];
+  return `<div class="cardface ${hasRealArt?'has-real-art':''} ${picked?'selected':''} ${c.rarity===4?'rare-3':''}" data-card="${c.id}" ${pickable?'data-pickable="1"':''}>
+    <div class="art">
+      ${hasRealArt?'':typeBadgeSVG(c.type)}
+      ${hasRealArt?'':`<span class="hp">HP ${c.hp}</span>`}
+      ${cardArtHTML(c)}
+      ${pickable?`<div class="pick">${picked?'✓':''}</div>`:(showFav?`<div class="fav-corner ${isFav?'active':''}" data-fav="${c.id}">${isFav?'♥':'♡'}</div>`:'')}
+    </div>
+    <div class="body">
+      <div class="name">${esc(c.name)}${cardVariant(c)?` <span class="variant-chip">${cardVariant(c)}</span>`:""}</div>
+      <div class="meta-line">${esc(c.edition||'')} · ${c.num||''}</div>
+      <div class="row" style="margin-top:0;">
+        <span class="stars">${"★".repeat(c.rarity)}${"☆".repeat(Math.max(0,4-c.rarity))}</span>
+        <span class="rarity-chip" style="color:${tier.color};border:1px solid ${tier.color}55;">${tier.label}</span>
+      </div>
+      <div class="row">${priceHtml}${availTags(c)}</div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- NAVBAR ---------------- */
+function logoEmblemSVG(){
+  return `<svg class="logo-emblem" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="none" stroke="var(--teal)" stroke-width="1.6"/>
+    <polygon points="16,10 22,13.5 22,20.5 16,24 10,20.5 10,13.5" fill="#1A2233" stroke="var(--red)" stroke-width="1.4"/>
+    <circle cx="16" cy="17" r="2.6" fill="var(--yellow)"/>
+  </svg>`;
+}
+function renderNavbar(){
+  const items = [["home","Início"],["explorar","Explorar"],["publicar","Publicar"],["trocas","Trocas"],["perfil","Perfil"]];
+  const cartCount = db.cart.reduce((a,i)=>a+i.qty,0);
+  const unreadCount = db.notifications.filter(n=>!n.read).length;
+  const u = currentUser();
+  document.getElementById("navbar").innerHTML = `
+    <div class="container bar">
+      <div class="logo-mark" data-nav="home">${logoEmblemSVG()}<span class="logo-text">POKÉ<span class="accent">TRADE</span></span><span class="indicator-lights"><span class="l1"></span><span class="l2"></span><span class="l3"></span></span></div>
+      <nav>${items.map(([v,l])=>`<a href="#" data-nav="${v}" class="${state.view===v?'active':''}">${l}</a>`).join("")}</nav>
+      <div class="search"><input id="navsearch" type="text" placeholder="Buscar carta, Pokémon ou coleção..." value="${state.view==='explorar'?esc(state.search):''}"></div>
+      <div class="right">
+        ${u?`<div class="icon-btn" data-nav="chat" title="Chat">💬</div>`:""}
+        ${u?`<div class="icon-btn" id="btn-notif-bell" style="position:relative;">🔔${unreadCount?`<span class="badge-count">${unreadCount}</span>`:""}</div>`:""}
+        <div class="icon-btn" data-nav="carrinho">🛒${cartCount?`<span class="badge-count">${cartCount}</span>`:""}</div>
+        <button class="btn btn-ghost btn-sm" data-nav="admin" title="Painel administrativo">Administração</button>
+        ${u
+          ? `<div class="user-chip" data-nav="perfil"><span class="uname">@${esc(u.handle||u.name.split(" ")[0].toLowerCase())}</span><div class="avatar">${avatarGlyph(u.avatar||'emblem', 20)}</div></div>`
+          : `<button class="btn btn-secondary btn-sm" data-nav="login">Entrar</button>`}
+      </div>
+      ${u && state.showNotifPanel?notifPanelHtml():""}
+    </div>`;
+  document.getElementById("mobilenav").innerHTML = `
+    <div class="row">
+      ${items.map(([v,l],i)=>`<a href="#" data-nav="${v}" class="${state.view===v?'active':''}">${["⌂","⚲","+","⇄","◔"][i]}<span>${l}</span></a>`).join("")}
+    </div>`;
+}
+function notifPanelHtml(){
+  const list = db.notifications;
+  return `<div id="notif-panel" class="notif-panel">
+    <div class="notif-head">
+      <span>Notificações</span>
+      ${list.some(n=>!n.read)?`<button id="btn-mark-all-read">Marcar todas como lidas</button>`:""}
+    </div>
+    ${list.length? list.map(n=>`
+      <div class="notif-item ${n.read?'':'unread'}" data-notif="${n.id}">
+        <div class="notif-dot"></div>
+        <div>
+          <div class="notif-text">${esc(n.text)}</div>
+          <div class="notif-date">${fmtDate(n.date)}</div>
+        </div>
+      </div>`).join("") : `<div class="notif-empty">Nenhuma notificação por enquanto.</div>`}
+  </div>`;
+}
+
+/* ---------------- HOME ---------------- */
+function viewHome(){
+  const cards = allCards();
+  const destaques = cards.slice(0,5);
+  const fIndex = ((state.featuredIndex||0) % cards.length + cards.length) % cards.length;
+  const featured = cards[fIndex];
+  const sideA = cards[(fIndex+1) % cards.length];
+  const sideB = cards[(fIndex+2) % cards.length];
+  const cats = [["Base Set","fogo"],["Escarlate & Violeta","eletrico"],["GX / VMAX","psiquico"],["Promocionais","grama"],["Japonesas","agua"],["Lendários","dragao"]];
+  const recent = db.recentlyViewed.map(id=>findCard(id)).filter(Boolean).slice(0,5);
+  const activeTrades = db.trades.filter(t=>t.status==='aguardando').length;
+  return `
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>POKÉTRADE DATABASE — MARKETPLACE DE COLECIONADORES</div>
+          <h1>Encontre, colecione e<br><span class="hl">troque</span> as cartas que<br>faltam na sua coleção</h1>
+          <p>Um catálogo vivo de cartas Pokémon anunciadas por colecionadores de Pokéville e região. Compre, venda ou negocie trocas diretamente com outros fãs.</p>
+          <div class="actions">
+            <button class="btn btn-primary" data-nav="explorar">▸ Explorar catálogo</button>
+            <button class="btn btn-secondary" data-requirelogin="publicar">+ Publicar carta</button>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><div class="val">${cards.length}</div><div class="lbl">Cartas no catálogo</div></div>
+            <div class="hero-stat"><div class="val">${activeTrades}</div><div class="lbl">Trocas em negociação</div></div>
+            <div class="hero-stat"><div class="val">${editionsList().length}</div><div class="lbl">Coleções disponíveis</div></div>
+          </div>
+        </div>
+        <div class="hero-panel">
+          <div class="hero-cards-row">
+            ${cardFace(featured,{showFav:false})}
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              ${[sideA,sideB].map(c=>cardFace(c,{showFav:false})).join("")}
+            </div>
+          </div>
+          <div class="dpad-row">
+            <div class="dpad" title="Navegar entre cartas em destaque">
+              <button class="dpad-btn dpad-up" data-dpad="prev" aria-label="Carta anterior">▲</button>
+              <button class="dpad-btn dpad-left" data-dpad="prev" aria-label="Carta anterior">◀</button>
+              <button class="dpad-btn dpad-center" data-dpad="open" aria-label="Ver carta">●</button>
+              <button class="dpad-btn dpad-right" data-dpad="next" aria-label="Próxima carta">▶</button>
+              <button class="dpad-btn dpad-down" data-dpad="next" aria-label="Próxima carta">▼</button>
+            </div>
+            <div class="dpad-hint">Use o D-pad para navegar pelo destaque · ${fIndex+1}/${cards.length}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="container section">
+      <h2>Em alta esta semana</h2>
+      <div class="sub">// cartas com mais buscas nas últimas 48 horas — clique para ver a ficha completa</div>
+      <div class="grid">${destaques.map(c=>cardFace(c)).join("")}</div>
+    </div>
+    ${recent.length? `
+    <div class="container section" style="padding-top:0">
+      <h2>Vistos recentemente</h2>
+      <div class="grid">${recent.map(c=>cardFace(c)).join("")}</div>
+    </div>`:``}
+    <div class="container section" style="padding-top:0">
+      <h2>Categorias populares</h2>
+      <div class="sub">// atalhos para as coleções mais buscadas</div>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+        ${cats.map(([label,type])=>`
+          <div class="cardface" data-nav="explorar" data-preset-edition="${esc(label)}" style="flex-direction:row;align-items:center;gap:12px;padding:14px;cursor:pointer;">
+            <div style="width:30px;height:30px;border-radius:4px;background:var(--surface-2);border:1px solid ${TYPE_COLORS[type].fill}55;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="${TYPE_COLORS[type].fill}">${typeGlyphPath(type)}</svg>
+            </div>
+            <div style="font-weight:800;font-family:var(--display);font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;">${label}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- EXPLORAR / BUSCA ---------------- */
+function editionsList(){
+  return [...new Set(allCards().map(c=>c.edition).filter(Boolean))].sort();
+}
+function priceRange(){
+  const prices = allCards().map(c=>c.price).filter(Boolean);
+  return { min: Math.min(...prices), max: Math.max(...prices) };
+}
+function sortResults(results){
+  const s = state.sortBy;
+  const withPrice = results.filter(c=>c.price);
+  const withoutPrice = results.filter(c=>!c.price);
+  if(s === "menor-preco"){ withPrice.sort((a,b)=>a.price-b.price); return withPrice.concat(withoutPrice); }
+  if(s === "maior-preco"){ withPrice.sort((a,b)=>b.price-a.price); return withPrice.concat(withoutPrice); }
+  if(s === "recentes"){ return [...results].sort((a,b)=>b.id-a.id); }
+  return results; // relevância = ordem original do catálogo
+}
+const EXPLORE_PAGE_SIZE = 9;
+function viewExplorar(){
+  const f = state.filters;
+  const pr = priceRange();
+  const maxPrice = f.maxPrice || pr.max;
+  let results = allCards().filter(c=>{
+    const q = state.search.trim().toLowerCase();
+    const matchesText = !q || c.name.toLowerCase().includes(q) || (c.pokemon||"").toLowerCase().includes(q) || (c.edition||"").toLowerCase().includes(q);
+    const matchesType = !f.type || c.type===f.type;
+    const matchesAvail = !f.avail || c.avail===f.avail || c.avail==="ambos";
+    const matchesCond = !f.cond || c.condCode===f.cond;
+    const matchesEdition = !f.edition || c.edition===f.edition;
+    const matchesRarity = !f.rarity || String(c.rarity)===String(f.rarity);
+    const matchesPrice = !c.price || c.price<=maxPrice;
+    return matchesText && matchesType && matchesAvail && matchesCond && matchesEdition && matchesRarity && matchesPrice;
+  });
+  results = sortResults(results);
+  const totalPages = Math.max(1, Math.ceil(results.length / EXPLORE_PAGE_SIZE));
+  const page = Math.min(state.explorePage||0, totalPages-1);
+  const pageResults = results.slice(page*EXPLORE_PAGE_SIZE, page*EXPLORE_PAGE_SIZE + EXPLORE_PAGE_SIZE);
+
+  const activePills = [];
+  if(f.type) activePills.push(["type", "Tipo: "+TYPE_LABEL[f.type]]);
+  if(f.avail) activePills.push(["avail", "Disponibilidade: "+(f.avail==='venda'?'à venda':'troca')]);
+  if(f.cond) activePills.push(["cond", "Condição: "+COND_LABEL[f.cond]]);
+  if(f.edition) activePills.push(["edition", "Coleção: "+f.edition]);
+  if(f.rarity) activePills.push(["rarity", "Raridade: "+RARITY_TIERS[f.rarity].label]);
+  if(f.maxPrice && f.maxPrice<pr.max) activePills.push(["maxPrice","Até "+fmtPrice(f.maxPrice)]);
+  if(state.search) activePills.push(["search","Busca: “"+state.search+"”"]);
+
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="home">‹ Voltar para a Home</div>
+      <div class="section-head">
+        <div>
+          <h2>${state.search? `Resultados para “${esc(state.search)}”`:'Explorar cartas'}</h2>
+          <div class="sub" style="margin-bottom:0;">${results.length} carta(s) encontrada(s)</div>
+        </div>
+        <div class="filter-group" style="margin-bottom:0;min-width:200px;">
+          <div class="label">Ordenar por</div>
+          <select id="f-sort">
+            <option value="relevancia" ${state.sortBy==='relevancia'?'selected':''}>Relevância</option>
+            <option value="menor-preco" ${state.sortBy==='menor-preco'?'selected':''}>Menor preço</option>
+            <option value="maior-preco" ${state.sortBy==='maior-preco'?'selected':''}>Maior preço</option>
+            <option value="recentes" ${state.sortBy==='recentes'?'selected':''}>Mais recentes</option>
+          </select>
+        </div>
+      </div>
+      <div class="layout-filters">
+        <div class="filters">
+          <h3>Filtros</h3>
+          ${activePills.length?`<div class="active-filter-pills">${activePills.map(([k,l])=>`<div class="pill">${esc(l)}<button data-unfilter="${k}">✕</button></div>`).join("")}</div>`:``}
+          <div class="filter-group">
+            <div class="label">Tipo</div>
+            <select id="f-type">
+              <option value="">Todos</option>
+              ${Object.keys(TYPE_LABEL).map(t=>`<option value="${t}" ${f.type===t?'selected':''}>${TYPE_LABEL[t]}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="label">Coleção / edição</div>
+            <select id="f-edition">
+              <option value="">Todas</option>
+              ${editionsList().map(e=>`<option value="${esc(e)}" ${f.edition===e?'selected':''}>${esc(e)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="label">Condição</div>
+            <select id="f-cond">
+              <option value="">Todas</option>
+              ${Object.entries(COND_LABEL).map(([k,l])=>`<option value="${k}" ${f.cond===k?'selected':''}>${l}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="label">Raridade</div>
+            <select id="f-rarity">
+              <option value="">Todas</option>
+              ${Object.entries(RARITY_TIERS).map(([k,t])=>`<option value="${k}" ${String(f.rarity)===k?'selected':''}>${t.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="filter-group">
+            <div class="label">Disponibilidade</div>
+            <label><input type="radio" name="avail" value="" ${!f.avail?'checked':''}> Todas</label>
+            <label><input type="radio" name="avail" value="venda" ${f.avail==='venda'?'checked':''}> À venda</label>
+            <label><input type="radio" name="avail" value="troca" ${f.avail==='troca'?'checked':''}> Para troca</label>
+          </div>
+          <div class="filter-group">
+            <div class="label">Preço até ${fmtPrice(maxPrice)}</div>
+            <input type="range" id="f-price" min="${pr.min}" max="${pr.max}" step="5" value="${maxPrice}" style="width:100%">
+          </div>
+          <button class="btn btn-secondary btn-block" id="clear-filters">Limpar filtros</button>
+        </div>
+        <div>
+          ${pageResults.length? `
+            <div class="grid">${pageResults.map(c=>cardFace(c)).join("")}</div>
+            ${totalPages>1?`
+            <div class="explore-pager">
+              <div class="dpad dpad-sm" title="Navegar entre páginas de resultados">
+                <button class="dpad-btn dpad-up" data-page-dpad="first" aria-label="Primeira página">▲</button>
+                <button class="dpad-btn dpad-left" data-page-dpad="prev" aria-label="Página anterior">◀</button>
+                <button class="dpad-btn dpad-center" data-page-dpad="top" aria-label="Voltar ao topo">●</button>
+                <button class="dpad-btn dpad-right" data-page-dpad="next" aria-label="Próxima página">▶</button>
+                <button class="dpad-btn dpad-down" data-page-dpad="last" aria-label="Última página">▼</button>
+              </div>
+              <div class="dpad-hint">Página ${page+1} de ${totalPages}</div>
+            </div>`:``}
+          ` : `
+            <div class="empty-state">
+              <h3>Nenhuma carta encontrada</h3>
+              <p>Tente buscar por outro nome ou remover alguns filtros.</p>
+              <button class="btn btn-secondary" id="clear-filters-2" style="margin-top:16px;">Limpar filtros</button>
+            </div>`}
+        </div>
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- DETALHE DA CARTA ---------------- */
+function viewDetalhe(){
+  const c = findCard(state.selectedCardId) || allCards()[0];
+  if(!db.recentlyViewed.includes(c.id)){
+    db.recentlyViewed = [c.id, ...db.recentlyViewed].slice(0,8);
+    persist();
+  } else if(db.recentlyViewed[0] !== c.id){
+    db.recentlyViewed = [c.id, ...db.recentlyViewed.filter(id=>id!==c.id)].slice(0,8);
+    persist();
+  }
+  const related = allCards().filter(x=>x.id!==c.id).slice(0,4);
+  const canBuy = (c.avail==='venda'||c.avail==='ambos') && c.price;
+  const canTrade = (c.avail==='troca'||c.avail==='ambos');
+  const isFav = db.favorites.includes(c.id);
+  const tier = RARITY_TIERS[c.rarity] || RARITY_TIERS[1];
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="explorar">‹ Voltar para o catálogo</div>
+      <div class="detail-grid">
+        <div>
+          <div class="detail-big-card ${c.rarity===4?'rare-3':''}">
+            ${typeBadgeSVG(c.type, 20)}
+            ${cardArtHTML(c)}
+            <span class="hp" style="position:absolute;top:14px;right:14px;font-size:13px;">HP ${c.hp}</span>
+          </div>
+        </div>
+        <div>
+          <div class="db-header">POKÉTRADE DATABASE · CARD #${c.num}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <h1 style="font-size:27px;text-transform:uppercase;letter-spacing:.2px;">${esc(c.name)}</h1>
+            <button class="btn-fav ${isFav?'active':''}" data-fav="${c.id}">${isFav?'♥':'♡'}</button>
+          </div>
+          <div class="tag-row" style="margin-top:10px;">
+            <span class="rarity-chip" style="color:${tier.color};border:1px solid ${tier.color}55;padding:4px 9px;">${"★".repeat(c.rarity)} ${tier.label}</span>
+            ${availTags(c)}
+          </div>
+          <div class="display-panel" style="margin-top:14px;padding:6px 18px;">
+            <div class="dp-label">Ficha da carta</div>
+            <div class="dp-led" style="background:var(--blue);box-shadow:0 0 5px var(--blue);"></div>
+            <div class="spec-table" style="border-top:none;margin-top:0;">
+              <div class="spec-row"><span class="k">Tipo</span><span class="v">${TYPE_LABEL[c.type]}</span></div>
+              <div class="spec-row"><span class="k">HP</span><span class="v">${c.hp}</span></div>
+              <div class="spec-row"><span class="k">Coleção</span><span class="v">${esc(c.edition)}</span></div>
+              <div class="spec-row" style="border-bottom:none;"><span class="k">Condição</span><span class="v">${COND_LABEL[c.condCode]}</span></div>
+            </div>
+          </div>
+          ${canBuy?`<div class="price-big" style="margin-top:16px;">${fmtPrice(c.price)}</div><p style="font-size:11.5px;color:var(--text-faint);margin-top:4px;font-family:var(--mono);">à vista no PIX (5% de desconto) ou em até 3x no cartão</p>`:``}
+          ${canTrade && c.tradefor?`<p style="margin-top:14px;font-size:12.5px;color:var(--teal-glow);"><strong>Aceita em troca:</strong> ${esc(c.tradefor)}</p>`:``}
+          <div style="display:flex;gap:12px;margin-top:18px;flex-wrap:wrap;">
+            ${canBuy?`<button class="btn btn-primary" id="btn-comprar">Comprar agora</button>`:""}
+            ${canTrade?`<button class="btn btn-trade" id="btn-trocar">Propor troca</button>`:""}
+          </div>
+          <div class="seller-box">
+            <div class="name">@${esc(c.seller)}</div>
+            <div class="meta">★★★★★ ${c.rating} avaliações · responde em ~2h</div>
+            <div class="meta">Entrega estimada: 3 a 8 dias úteis · frete calculado no carrinho a partir do seu CEP</div>
+          </div>
+        </div>
+      </div>
+      <div class="section" style="padding-bottom:0">
+        <h2>Você também pode gostar</h2>
+        <div class="grid" style="margin-top:16px;">${related.map(c=>cardFace(c)).join("")}</div>
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- CARRINHO / CHECKOUT COM FRETE POR CEP ---------------- */
+function viewCarrinho(){
+  const items = db.cart.map(it=>({...it, card: findCard(it.id)})).filter(it=>it.card);
+  const subtotal = items.reduce((a,i)=>a+i.card.price*i.qty,0);
+  const cep = state.cepInput || "";
+  const frete = calcFrete(cep);
+  const freteValor = frete ? frete.valor : 0;
+  const total = subtotal + freteValor;
+  if(!items.length){
+    return `<div class="container section">
+      <h2>Seu carrinho</h2>
+      <div class="empty-state">
+        <h3>Seu carrinho está vazio</h3>
+        <p>Explore cartas disponíveis e adicione suas favoritas.</p>
+        <button class="btn btn-primary" data-nav="explorar" style="margin-top:16px;">Explorar cartas</button>
+      </div>
+    </div>${footerHtml()}`;
+  }
+  return `
+    <div class="container section">
+      <h2>Seu carrinho</h2>
+      <div class="sub">${items.length} carta(s) selecionada(s)</div>
+      <div class="detail-grid" style="grid-template-columns:1fr 380px;">
+        <div>
+          ${items.map(it=>`
+            <div class="cart-item">
+              <div class="thumb">${cardArtHTML(it.card)}</div>
+              <div style="flex:1;">
+                <div style="font-weight:bold;font-family:var(--display);">${esc(it.card.name)}</div>
+                <div style="font-size:11.5px;color:var(--muted);">Condição: ${COND_LABEL[it.card.condCode]}</div>
+                <div class="qty-ctrl">
+                  <button data-qty="dec" data-id="${it.id}">−</button>
+                  <span>${it.qty}</span>
+                  <button data-qty="inc" data-id="${it.id}">+</button>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div class="price" style="font-size:15px;">${fmtPrice(it.card.price*it.qty)}</div>
+                <div style="font-size:11px;color:var(--muted);cursor:pointer;margin-top:8px;" data-qty="remove" data-id="${it.id}">remover</div>
+              </div>
+            </div>`).join("")}
+        </div>
+        <div class="summary-box display-panel">
+          <div class="dp-label">Resumo do pedido</div>
+          <div class="dp-led" style="background:var(--blue);box-shadow:0 0 5px var(--blue);"></div>
+          <div class="field" style="margin-bottom:14px;margin-top:10px;">
+            <label>CEP para calcular o frete</label>
+            <div class="cep-row">
+              <input id="cep-input" type="text" placeholder="00000-000" value="${esc(cep)}" maxlength="9">
+              <button class="btn btn-secondary btn-sm" id="btn-calc-frete">Calcular</button>
+            </div>
+            ${frete?`<div class="hint">Chega em até ${frete.prazo} dias úteis</div>`:`<div class="hint">Informe um CEP válido (8 dígitos) para ver o frete</div>`}
+          </div>
+          <div class="summary-row"><span>Subtotal</span><span>${fmtPrice(subtotal)}</span></div>
+          <div class="summary-row"><span>Frete estimado</span><span>${frete?fmtPrice(freteValor):"—"}</span></div>
+          <div class="summary-row total"><span>Total</span><span class="val">${fmtPrice(total)}</span></div>
+          <div class="field" style="margin-top:16px;">
+            <label>Forma de pagamento</label>
+            <div class="radio-row" style="flex-direction:column;gap:9px;">
+              <label><input type="radio" name="pay" value="pix" checked> PIX (5% de desconto)</label>
+              <label><input type="radio" name="pay" value="cartao"> Cartão de crédito</label>
+              <label><input type="radio" name="pay" value="boleto"> Boleto bancário</label>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-checkout" ${frete?'':'disabled'} style="margin-top:14px;">Finalizar compra</button>
+          ${frete?``:`<div class="hint" style="margin-top:8px;">Calcule o frete para finalizar a compra.</div>`}
+        </div>
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- PEDIDOS (histórico + acompanhamento) ---------------- */
+const ORDER_STAGES = ["Pedido realizado","Pagamento confirmado","Preparando envio","Enviado","Entregue"];
+function orderTrackHtml(order){
+  const cur = order.statusHistory.length - 1;
+  return `<div class="track">
+    ${ORDER_STAGES.map((s,i)=>`
+      <div class="step ${i<cur?'done':''} ${i===cur?'current':''}">
+        <div class="line"></div>
+        <div class="dot">${i<cur?'✓':''}</div>
+        <div class="lbl">${s}</div>
+      </div>`).join("")}
+  </div>`;
+}
+/* ---------------- CHAT (BR / Global) ---------------- */
+function doSendChatMessage(channel, text){
+  const u = currentUser();
+  if(!u || !text.trim()) return;
+  db.chat[channel].push({from:u.handle, text:text.trim(), date:Date.now(), self:true});
+  persist();
+  const repliers = channel === "br"
+    ? ["mistywater","brockrocha","giovannirj","erikapkmn"]
+    : ["ash_trainer_us","pkmn_kanto"];
+  const replies = channel === "br"
+    ? ["Boa! Eu tenho uma pra negociar, te chamo por trocas.", "Já vi esse pedido em outro canal, boa sorte na busca!", "Dá uma olhada no catálogo, acho que apareceu uma hoje.", "Aqui também tô de olho nessa carta 👀"]
+    : ["Nice find, good luck with the trade!", "I might have one, check my profile.", "That set has been popular lately.", "Welcome to the community!"];
+  setTimeout(()=>{
+    db.chat[channel].push({
+      from: repliers[Math.floor(Math.random()*repliers.length)],
+      text: replies[Math.floor(Math.random()*replies.length)],
+      date: Date.now(),
+    });
+    persist();
+    if(state.view === "chat" && (state.chatChannel||"br") === channel) render();
+  }, 1600);
+}
+function viewChat(){
+  if(!isLoggedIn()){
+    return `<div class="container section"><div class="empty-state"><h3>Entre para acessar o chat</h3><button class="btn btn-primary" data-nav="login" style="margin-top:14px;">Entrar</button></div></div>${footerHtml()}`;
+  }
+  const channel = state.chatChannel || "br";
+  const msgs = db.chat[channel] || [];
+  const u = currentUser();
+  return `
+    <div class="container section">
+      <h2>Chat da comunidade</h2>
+      <div class="sub">Converse com outros colecionadores em tempo real</div>
+      <div class="tabs" style="margin-top:18px;">
+        <button data-chat-channel="br" class="${channel==='br'?'active':''}">Chat BR</button>
+        <button data-chat-channel="global" class="${channel==='global'?'active':''}">Global</button>
+      </div>
+      <div class="chat-window" id="chat-window">
+        ${msgs.length ? msgs.map(m=>`
+          <div class="chat-msg ${m.self?'self':''}">
+            <div class="chat-avatar">${m.self ? avatarGlyph(u.avatar||'emblem', 18) : esc((m.from||"?")[0].toUpperCase())}</div>
+            <div>
+              <div class="chat-bubble"><strong>@${esc(m.from)}</strong><br>${esc(m.text)}</div>
+              <div class="chat-time">${new Date(m.date).toLocaleTimeString("pt-BR",{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+          </div>`).join("") : `<div class="empty-inline">Nenhuma mensagem ainda. Diga olá!</div>`}
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Escreva uma mensagem...">
+        <button class="btn btn-trade" id="btn-chat-send">Enviar</button>
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+function viewPedidoDetalhe(){
+  const order = db.orders.find(o=>o.id===state.lastOrderId) || db.orders[db.orders.length-1];
+  if(!order){
+    return `<div class="container section"><div class="empty-state"><h3>Nenhum pedido encontrado</h3></div></div>${footerHtml()}`;
+  }
+  const curIdx = order.statusHistory.length - 1;
+  const canAdvance = curIdx < ORDER_STAGES.length - 1;
+  const prazo = order.freteInfo ? order.freteInfo.prazo : 5;
+  const dateStart = new Date(order.date + (prazo-1)*86400000);
+  const dateEnd = new Date(order.forecastDate);
+  const fmtShort = d => d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="perfil" data-ptab="pedidos">‹ Voltar para pedidos</div>
+      <h2>Pedido ${order.id}</h2>
+      <div class="sub">Realizado em ${fmtDate(order.date)}</div>
+      <div class="order-card" style="margin-top:20px;">
+        ${orderTrackHtml(order)}
+        <div class="divider"></div>
+        ${order.items.map(it=>`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;"><span>${it.qty}x ${esc(it.name)}</span><span style="font-family:var(--mono);">${fmtPrice(it.price*it.qty)}</span></div>`).join("")}
+        <div class="divider"></div>
+        <div class="summary-row"><span>Subtotal</span><span>${fmtPrice(order.subtotal)}</span></div>
+        <div class="summary-row"><span>Frete</span><span>${fmtPrice(order.frete)}</span></div>
+        <div class="summary-row total"><span>Total</span><span class="val">${fmtPrice(order.total)}</span></div>
+        <div class="divider"></div>
+        <div style="font-size:12.5px;color:var(--text-dim);line-height:1.7;">
+          <strong>Endereço de entrega:</strong> Rua das Cerejeiras, 123 — Pokéville, BR — CEP ${esc(state.cepInput||'01001-000')}<br>
+          <strong>Pagamento:</strong> ${esc(order.payment)}<br>
+          <strong>Previsão de entrega:</strong> ${fmtShort(dateStart)} a ${fmtShort(dateEnd)} (${prazo} dias úteis)
+        </div>
+        ${canAdvance?`<button class="btn btn-secondary btn-sm" id="btn-advance-order" data-order="${order.id}" style="margin-top:14px;">Atualizar status do pedido</button>`:`<p style="margin-top:14px;color:var(--green);font-weight:bold;font-size:13px;">Pedido entregue ✓</p>`}
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- PROPOSTA DE TROCA ---------------- */
+function viewTroca(){
+  const target = findCard(state.tradeTargetId);
+  if(!target){
+    return `<div class="container section">
+      <h2>Propor troca</h2>
+      <div class="empty-state">
+        <h3>Escolha uma carta para trocar</h3>
+        <p>Acesse a página de uma carta disponível para troca e clique em “Propor troca”.</p>
+        <button class="btn btn-primary" data-nav="explorar" style="margin-top:16px;">Explorar cartas</button>
+      </div>
+    </div>${footerHtml()}`;
+  }
+  const offeredCount = state.tradeOffered.size;
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="detalhe">‹ Voltar para a carta</div>
+      <h2>Propor troca</h2>
+      <div class="sub">${esc(target.name)} · ${target.num} · @${esc(target.seller)}</div>
+      <div class="step-track"><div class="seg done"></div><div class="seg"></div><div class="seg"></div></div>
+      ${target.tradefor?`<p style="font-size:12.5px;color:var(--green);margin-bottom:18px;"><strong>${esc(target.sellerName||target.seller)} aceita em troca:</strong> ${esc(target.tradefor)}</p>`:``}
+      <div class="detail-grid display-panel" style="padding:20px;">
+        <div class="dp-label">Negociação</div>
+        <div class="dp-led" style="background:var(--teal);box-shadow:0 0 5px var(--teal);"></div>
+        <div>
+          <h3 style="font-size:15px;margin-bottom:12px;">Você recebe</h3>
+          <div style="max-width:250px;">${cardFace(target,{showFav:false})}</div>
+        </div>
+        <div>
+          <h3 style="font-size:15px;margin-bottom:12px;">Suas cartas disponíveis para oferecer (${offeredCount} selecionada${offeredCount===1?'':'s'})</h3>
+          <div class="grid">${MY_CARDS_POOL.map(c=>cardFace(c,{pickable:true, picked: state.tradeOffered.has(c.id)})).join("")}</div>
+        </div>
+      </div>
+      <div class="field" style="max-width:520px;margin-top:24px;">
+        <label>Mensagem para o outro colecionador (opcional)</label>
+        <textarea id="trade-msg" rows="3" placeholder="Ex: Tenho essas cartas em ótimo estado, topo combinar o frete também."></textarea>
+      </div>
+      <button class="btn btn-trade" id="btn-revisar-troca" ${offeredCount===0?'disabled':''}>Revisar proposta</button>
+    </div>
+    ${footerHtml()}
+  `;
+}
+function viewTrocaRevisao(){
+  const target = findCard(state.tradeTargetId);
+  const offered = MY_CARDS_POOL.filter(c=>state.tradeOffered.has(c.id));
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="troca">‹ Voltar e ajustar</div>
+      <h2>Revisar proposta de troca</h2>
+      <div class="detail-grid">
+        <div>
+          <h3 style="font-size:14px;margin-bottom:10px;">Você recebe</h3>
+          <div class="grid">${cardFace(target,{showFav:false})}</div>
+        </div>
+        <div>
+          <h3 style="font-size:14px;margin-bottom:10px;">Você oferece</h3>
+          <div class="grid">${offered.map(c=>cardFace(c,{showFav:false})).join("")}</div>
+        </div>
+      </div>
+      <p style="margin-top:22px;color:var(--muted);font-size:12.5px;">Ao enviar, @${esc(target.seller)} poderá aceitar, recusar ou sugerir uma contraproposta.</p>
+      <div style="display:flex;gap:12px;margin-top:16px;">
+        <button class="btn btn-trade" id="btn-enviar-troca">Enviar proposta</button>
+        <button class="btn btn-ghost" data-nav="troca">Cancelar</button>
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- TROCAS (lista + contraproposta) ---------------- */
+const TRADE_STATUS_COLOR = {aguardando:"var(--gold)", aceita:"var(--green)", recusada:"var(--red)", contraproposta:"var(--blue)", concluida:"var(--teal-dark)"};
+const TRADE_STATUS_LABEL = {aguardando:"Aguardando resposta", aceita:"Aceita", recusada:"Recusada", contraproposta:"Contraproposta enviada", concluida:"Concluída"};
+function miniCardHtml(c){
+  return `<div style="text-align:center;font-size:10px;font-family:var(--mono);color:var(--text-dim);">
+    <div style="width:100%;aspect-ratio:1;background:radial-gradient(ellipse at 50% 30%, #1c2333, #0d1119);border:1px solid var(--line-solid);border-radius:4px;display:flex;align-items:center;justify-content:center;margin-bottom:5px;overflow:hidden;"><div style="width:55%;height:55%;display:flex;">${cardArtHTML(c)}</div></div>
+    ${esc(c.name)}
+  </div>`;
+}
+function tradeCardHtml(t){
+  return `
+    <div class="trade-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-weight:bold;font-size:13px;font-family:var(--mono);">${t.direction==='recebida'?'DE':'PARA'} @${esc(t.withName||t.withHandle)}</div>
+          <div style="font-size:10.5px;color:var(--text-faint);font-family:var(--mono);">${fmtDate(t.createdAt)} · ${t.id}</div>
+        </div>
+        <span class="trade-status" style="background:${TRADE_STATUS_COLOR[t.status]}">${TRADE_STATUS_LABEL[t.status]}</span>
+      </div>
+      <div class="swap-layout" style="margin-top:16px;">
+        <div class="swap-col" style="flex:1;min-width:140px;">
+          <div class="swap-label">${t.direction==='recebida'?'Oferecem (item deles)':'Você oferece'}</div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr));max-width:320px;">
+            ${t.offeredCards.map(miniCardHtml).join("")}
+          </div>
+        </div>
+        <div class="swap-icon">⇄</div>
+        <div class="swap-col" style="width:100px;">
+          <div class="swap-label">${t.direction==='recebida'?'Pela sua carta':'Você quer'}</div>
+          ${miniCardHtml(t.targetCard)}
+        </div>
+      </div>
+      ${t.message?`<p style="font-size:12px;color:var(--text-dim);margin-top:12px;font-style:italic;">“${esc(t.message)}”</p>`:``}
+      ${t.direction==='recebida' && t.status==='aguardando'?`
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn btn-trade btn-sm" data-trade-action="aceitar" data-trade="${t.id}">Aceitar</button>
+          <button class="btn btn-danger-outline btn-sm" data-trade-action="recusar" data-trade="${t.id}">Recusar</button>
+          <button class="btn btn-ghost btn-sm" data-trade-action="contraproposta" data-trade="${t.id}">Contraproposta</button>
+        </div>
+      `:``}
+      ${t.direction==='recebida' && t.status==='aceita'?`
+        <div style="margin-top:14px;">
+          <button class="btn btn-secondary btn-sm" data-trade-action="concluir" data-trade="${t.id}">Marcar troca como concluída</button>
+        </div>
+      `:``}
+    </div>`;
+}
+function viewTrocas(){
+  const recebidas = db.trades.filter(t=>t.direction==='recebida');
+  const enviadas = db.trades.filter(t=>t.direction==='enviada');
+  return `
+    <div class="container section">
+      <h2>Minhas trocas</h2>
+      <div class="sub">Propostas recebidas e enviadas</div>
+      <h3 style="font-size:15px;margin:20px 0 10px;">Recebidas (${recebidas.length})</h3>
+      ${recebidas.length? recebidas.map(tradeCardHtml).join("") : `<div class="empty-inline">Nenhuma proposta recebida no momento.</div>`}
+      <h3 style="font-size:15px;margin:24px 0 10px;">Enviadas (${enviadas.length})</h3>
+      ${enviadas.length? enviadas.map(tradeCardHtml).join("") : `<div class="empty-inline">Você ainda não enviou propostas de troca. <span style="color:var(--red);cursor:pointer;" data-nav="explorar">Explorar cartas para troca →</span></div>`}
+    </div>
+    ${footerHtml()}
+  `;
+}
+function viewContraproposta(){
+  const t = db.trades.find(tr=>tr.id===state.counterTradeId);
+  if(!t) return `<div class="container section"><div class="empty-state"><h3>Proposta não encontrada</h3></div></div>${footerHtml()}`;
+  const offeredCount = state.tradeOffered.size;
+  return `
+    <div class="container section">
+      <div class="breadcrumb" data-nav="trocas">‹ Voltar para trocas</div>
+      <h2>Contraproposta para @${esc(t.withName||t.withHandle)}</h2>
+      <div class="sub">Selecione outra(s) carta(s) para oferecer no lugar da proposta original</div>
+      <div class="detail-grid" style="margin-top:20px;">
+        <div>
+          <h3 style="font-size:14px;margin-bottom:10px;">Carta em negociação</h3>
+          <div style="max-width:220px;">${cardFace(t.targetCard,{showFav:false})}</div>
+        </div>
+        <div>
+          <h3 style="font-size:14px;margin-bottom:10px;">Suas cartas para contrapropor (${offeredCount} selecionada${offeredCount===1?'':'s'})</h3>
+          <div class="grid">${MY_CARDS_POOL.map(c=>cardFace(c,{pickable:true, picked: state.tradeOffered.has(c.id)})).join("")}</div>
+        </div>
+      </div>
+      <button class="btn btn-trade" id="btn-enviar-contraproposta" data-trade="${t.id}" ${offeredCount===0?'disabled':''} style="margin-top:20px;">Enviar contraproposta</button>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- PUBLICAR CARTA (com validação real) ---------------- */
+function viewPublicar(){
+  const d = state.publishData;
+  const step = state.publishStep;
+  return `
+    <div class="container section">
+      <h2>Publicar carta</h2>
+      <div class="sub">Passo ${step} de 3</div>
+      <div class="step-track">
+        <div class="seg ${step>=1?'done':''}"></div><div class="seg ${step>=2?'done':''}"></div><div class="seg ${step>=3?'done':''}"></div>
+      </div>
+      <div style="max-width:640px;">
+        ${step===1?`
+          <div class="field ${d._errName?'has-error':''}">
+            <label>Nome da carta</label>
+            <input id="p-name" type="text" value="${esc(d.name||'')}" placeholder="Ex: Charizard ex">
+            <div class="err-msg">Informe o nome da carta para continuar.</div>
+          </div>
+          <div class="field ${d._errEdition?'has-error':''}">
+            <label>Edição / coleção</label>
+            <input id="p-edition" type="text" value="${esc(d.edition||'')}" placeholder="Ex: Destinos de Paldea">
+            <div class="err-msg">Informe a edição da carta.</div>
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select id="p-type">
+              ${Object.entries(TYPE_LABEL).map(([k,l])=>`<option value="${k}" ${d.type===k?'selected':''}>${l}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Condição</label>
+            <div class="radio-row">
+              ${Object.entries(COND_LABEL).map(([k,l])=>`<label><input type="radio" name="p-cond" value="${k}" ${d.cond===k?'checked':''}> ${l}</label>`).join("")}
+            </div>
+          </div>
+          <div class="field">
+            <label>Fotos da carta</label>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;">
+              <div>
+                <div class="upload-box" id="upload-frente" data-upload-target="frente">
+                  ${d.imgFrente
+                    ? `<img src="${d.imgFrente}" alt="Frente da carta"><button type="button" class="upload-remove" data-remove-img="frente">✕</button>`
+                    : `<span class="upload-plus">+</span><span>Frente</span>`}
+                </div>
+                <input type="file" id="file-frente" accept="image/jpeg,image/png,image/webp" style="display:none;">
+              </div>
+              <div>
+                <div class="upload-box" id="upload-verso" data-upload-target="verso">
+                  ${d.imgVerso
+                    ? `<img src="${d.imgVerso}" alt="Verso da carta"><button type="button" class="upload-remove" data-remove-img="verso">✕</button>`
+                    : `<span class="upload-plus">+</span><span>Verso</span>`}
+                </div>
+                <input type="file" id="file-verso" accept="image/jpeg,image/png,image/webp" style="display:none;">
+              </div>
+            </div>
+            <div class="hint">JPG, PNG ou WEBP · até 5 MB por imagem</div>
+            <div class="err-msg" id="upload-err" style="display:${d._errUpload?'block':'none'}">${d._errUpload||''}</div>
+          </div>
+          <button class="btn btn-primary" id="pub-next-1">Continuar</button>
+        `:``}
+        ${step===2?`
+          <div class="field ${d._errAvail?'has-error':''}">
+            <label>Disponibilizar para</label>
+            <div class="radio-row">
+              <label><input type="checkbox" id="p-venda" ${d.venda?'checked':''}> Venda</label>
+              <label><input type="checkbox" id="p-troca" ${d.troca?'checked':''}> Troca</label>
+            </div>
+            <div class="err-msg">Selecione ao menos uma opção: venda, troca, ou ambas.</div>
+          </div>
+          <div class="field ${d._errPrice?'has-error':''}">
+            <label>Preço (obrigatório se à venda)</label>
+            <input id="p-price" type="number" value="${esc(d.price||'')}" placeholder="R$">
+            <div class="err-msg">Informe um preço válido para a venda.</div>
+          </div>
+          <div class="field ${d._errTradefor?'has-error':''}">
+            <label>O que aceita em troca (obrigatório se para troca)</label>
+            <textarea id="p-tradefor" rows="3" placeholder="Ex: cartas do tipo água, condição a partir de NM">${esc(d.tradefor||'')}</textarea>
+            <div class="err-msg">Descreva o que você aceita receber em troca.</div>
+          </div>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-ghost" id="pub-back-2">Voltar</button>
+            <button class="btn btn-primary" id="pub-next-2">Continuar</button>
+          </div>
+        `:``}
+        ${step===3?`
+          <div class="helper-note">Revise os dados abaixo. Ao publicar, a carta será adicionada ao catálogo e ao seu perfil.</div>
+          <table style="margin-bottom:20px;">
+            <tr><td style="font-weight:bold;width:160px;">Nome</td><td>${esc(d.name||'—')}</td></tr>
+            <tr><td style="font-weight:bold;">Edição</td><td>${esc(d.edition||'—')}</td></tr>
+            <tr><td style="font-weight:bold;">Tipo</td><td>${TYPE_LABEL[d.type]||'—'}</td></tr>
+            <tr><td style="font-weight:bold;">Condição</td><td>${COND_LABEL[d.cond]||'—'}</td></tr>
+            <tr><td style="font-weight:bold;">Disponibilidade</td><td>${[d.venda?'Venda':null,d.troca?'Troca':null].filter(Boolean).join(' e ')||'—'}</td></tr>
+            ${d.venda?`<tr><td style="font-weight:bold;">Preço</td><td>${fmtPrice(Number(d.price))}</td></tr>`:``}
+            ${d.troca?`<tr><td style="font-weight:bold;">Aceita em troca</td><td>${esc(d.tradefor)}</td></tr>`:``}
+          </table>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-ghost" id="pub-back-3">Voltar</button>
+            <button class="btn btn-primary" id="pub-finish">Publicar carta</button>
+          </div>
+        `:``}
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- LOGIN / CADASTRO / RECUPERAR SENHA ---------------- */
+function viewLogin(){
+  const mode = state.authMode;
+  return `
+    <div class="container section" style="max-width:460px;">
+      ${state.redirectAfterLogin?`<div class="auth-note">Entre na sua conta para continuar — você será redirecionado automaticamente.</div>`:``}
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:8px;padding:30px;">
+        <div class="tabs" style="margin-top:0;">
+          <button data-authmode="login" class="${mode==='login'?'active':''}">Entrar</button>
+          <button data-authmode="cadastro" class="${mode==='cadastro'?'active':''}">Criar conta</button>
+          <button data-authmode="recuperar" class="${mode==='recuperar'?'active':''}">Esqueci a senha</button>
+        </div>
+        ${mode==='login'?`
+          <div class="field ${state._loginErr?'has-error':''}">
+            <label>E-mail</label>
+            <input id="login-email" type="email" placeholder="voce@email.com" value="${esc(state._loginEmail||'')}">
+          </div>
+          <div class="field ${state._loginErr?'has-error':''}">
+            <label>Senha</label>
+            <input id="login-pass" type="password" placeholder="••••••••">
+            <div class="err-msg" style="display:${state._loginErr?'block':'none'}">E-mail ou senha incorretos. Tente novamente.</div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-login">Entrar</button>
+          <p style="text-align:center;color:var(--muted);font-size:11.5px;margin-top:14px;">Já existe uma conta configurada em <strong>ash@email.com</strong> / <strong>pikachu123</strong>, ou crie a sua.</p>
+        `:``}
+        ${mode==='cadastro'?`
+          <div class="field ${state._cadErr==='name'?'has-error':''}">
+            <label>Nome completo</label>
+            <input id="cad-name" type="text" placeholder="Seu nome" value="${esc(state._cadForm.name||'')}">
+            <div class="err-msg">Informe seu nome.</div>
+          </div>
+          <div class="field ${state._cadErr==='email'?'has-error':''}">
+            <label>E-mail</label>
+            <input id="cad-email" type="email" placeholder="voce@email.com" value="${esc(state._cadForm.email||'')}">
+            <div class="err-msg">${state._cadErrMsg||'Informe um e-mail válido.'}</div>
+          </div>
+          <div class="field ${state._cadErr==='pass'?'has-error':''}">
+            <label>Senha</label>
+            <input id="cad-pass" type="password" placeholder="Mínimo 6 caracteres">
+            <div class="err-msg">A senha deve ter ao menos 6 caracteres.</div>
+          </div>
+          <div class="field ${state._cadErr==='confirm'?'has-error':''}">
+            <label>Confirmar senha</label>
+            <input id="cad-confirm" type="password" placeholder="Repita a senha">
+            <div class="err-msg">As senhas não coincidem.</div>
+          </div>
+          <button class="btn btn-primary btn-block" id="btn-cadastro">Criar conta</button>
+        `:``}
+        ${mode==='recuperar'?`
+          ${state._recSent?`
+            <div class="helper-note">Se o e-mail <strong>${esc(state._recEmail)}</strong> estiver cadastrado, um link de recuperação foi enviado para ele.</div>
+            <button class="btn btn-secondary btn-block" data-authmode="login">Voltar para o login</button>
+          `:`
+            <div class="field">
+              <label>E-mail cadastrado</label>
+              <input id="rec-email" type="email" placeholder="voce@email.com">
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-recuperar">Enviar link de recuperação</button>
+          `}
+        `:``}
+      </div>
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- PERFIL ---------------- */
+function viewPerfil(){
+  const u = currentUser();
+  if(!u){
+    return `<div class="container section"><div class="empty-state"><h3>Faça login para ver seu perfil</h3><button class="btn btn-primary" data-nav="login" style="margin-top:14px;">Entrar</button></div></div>${footerHtml()}`;
+  }
+  const venda = db.myCards.filter(c=>c.avail==='venda'||c.avail==='ambos');
+  const troca = db.myCards.filter(c=>c.avail==='troca'||c.avail==='ambos');
+  const favoritos = db.favorites.map(id=>findCard(id)).filter(Boolean);
+  const recentes = db.recentlyViewed.map(id=>findCard(id)).filter(Boolean);
+  const pedidos = [...db.orders].reverse();
+  const tab = state.profileTab;
+  const tabs = [
+    ["venda",`Minhas cartas à venda (${venda.length})`],
+    ["troca",`Minhas cartas para troca (${troca.length})`],
+    ["pedidos",`Pedidos (${pedidos.length})`],
+    ["favoritos",`Favoritos (${favoritos.length})`],
+    ["recentes",`Vistos recentemente (${recentes.length})`],
+  ];
+  return `
+    <div class="profile-head">
+      <div class="container row">
+        <div class="avatar-lg" id="btn-open-avatar-picker" title="Alterar avatar">${avatarGlyph(u.avatar||'emblem', 40)}<div class="avatar-edit-badge">✎</div></div>
+        <div>
+          <h2 style="color:#fff;font-size:22px;">${esc(u.name)}</h2>
+          <p style="color:#B9C2D4;font-size:12.5px;margin-top:4px;">@${esc(u.handle)} · Colecionador · Pokéville, BR</p>
+          <p style="color:var(--gold);font-size:11.5px;margin-top:2px;">★★★★★ 312 avaliações</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;border-color:#fff;color:#fff;" id="btn-logout">Sair</button>
+      </div>
+      ${state.showAvatarPicker?`
+      <div class="container" style="padding-bottom:18px;">
+        <div class="avatar-picker">
+          <div class="avatar-picker-label">Escolha seu avatar</div>
+          <div class="avatar-grid">
+            ${AVATAR_OPTIONS.map(k=>`<button class="avatar-option ${((u.avatar||'emblem')===k)?'selected':''}" data-set-avatar="${k}">${avatarGlyph(k, 30)}</button>`).join("")}
+          </div>
+        </div>
+      </div>`:``}
+    </div>
+    <div class="container section">
+      <div class="tabs">
+        ${tabs.map(([v,l])=>`<button data-ptab="${v}" class="${tab===v?'active':''}">${l}</button>`).join("")}
+      </div>
+      ${tab==='venda'?(venda.length?`<div class="grid">${venda.map(c=>cardFace(c)).join("")}</div>`:`<div class="empty-inline">Você ainda não publicou cartas à venda. <span style="color:var(--red);cursor:pointer;" data-nav="publicar">Publicar uma carta →</span></div>`):``}
+      ${tab==='troca'?(troca.length?`<div class="grid">${troca.map(c=>cardFace(c)).join("")}</div>`:`<div class="empty-inline">Você ainda não publicou cartas para troca.</div>`):``}
+      ${tab==='favoritos'?(favoritos.length?`<div class="grid">${favoritos.map(c=>cardFace(c)).join("")}</div>`:`<div class="empty-inline">Nenhuma carta favoritada ainda.</div>`):``}
+      ${tab==='recentes'?(recentes.length?`<div class="grid">${recentes.map(c=>cardFace(c)).join("")}</div>`:`<div class="empty-inline">Nenhuma carta visualizada ainda.</div>`):``}
+      ${tab==='pedidos'?(pedidos.length?`
+        <table>
+          <tr><th>Pedido</th><th>Data</th><th>Itens</th><th>Total</th><th>Status</th><th></th></tr>
+          ${pedidos.map(o=>`<tr>
+            <td style="font-family:var(--mono);">${o.id}</td>
+            <td>${fmtDate(o.date)}</td>
+            <td>${o.items.length}</td>
+            <td>${fmtPrice(o.total)}</td>
+            <td><span class="badge" style="background:${o.statusHistory.length>=5?'var(--green)':'var(--text-dim)'}">${o.statusHistory[o.statusHistory.length-1].status}</span></td>
+            <td><button class="btn btn-ghost btn-sm" data-view-order="${o.id}">Acompanhar</button></td>
+          </tr>`).join("")}
+        </table>
+      `:`<div class="empty-inline">Nenhum pedido realizado ainda.</div>`):``}
+    </div>
+    ${footerHtml()}
+  `;
+}
+
+/* ---------------- ADMINISTRAÇÃO ---------------- */
+function viewAdmin(){
+  const items = [["geral","Painel geral"],["usuarios","Usuários"],["produtos","Cartas cadastradas"],["trocas","Trocas"],["pedidos","Pedidos"],["relatorios","Relatórios"]];
+  const tab = state.adminTab;
+  const statusColor = {ativo:"var(--green)", "revisão":"var(--gold)", suspenso:"var(--red)"};
+  const seedUsers = [
+    {user:"ashketchum_rj", email:"ash@email.com", cartas:16, status:"ativo"},
+    {user:"mistywater", email:"misty@email.com", cartas:9, status:"ativo"},
+    {user:"brockrocha", email:"brock@email.com", cartas:5, status:"revisão"},
+    {user:"giovannirj", email:"giovanni@email.com", cartas:22, status:"suspenso"},
+    {user:"erikapkmn", email:"erika@email.com", cartas:7, status:"ativo"},
+  ];
+  const registeredUsers = db.users.slice(1).map(u=>({user:u.handle||u.email.split("@")[0], email:u.email, cartas:db.myCards.filter(c=>c.seller===(u.handle||u.email)).length, status:"ativo"}));
+  const allUsers = seedUsers.concat(registeredUsers);
+
+  let content = "";
+  if(tab==='geral'){
+    content = `
+      <h2>Painel geral</h2>
+      <div class="display-panel" style="margin-top:18px;">
+        <div class="dp-label">System status</div>
+        <div class="dp-led" style="background:var(--green);box-shadow:0 0 5px var(--green);"></div>
+        <div class="kpi-row" style="margin-bottom:0;">
+          <div class="kpi"><div class="val">${allUsers.length}</div><div class="lbl">Usuários cadastrados</div></div>
+          <div class="kpi"><div class="val">${allCards().length}</div><div class="lbl">Cartas no catálogo</div></div>
+          <div class="kpi"><div class="val">${db.myCards.length}</div><div class="lbl">Cartas publicadas por usuários</div></div>
+          <div class="kpi"><div class="val">${db.trades.length}</div><div class="lbl">Propostas de troca</div></div>
+          <div class="kpi"><div class="val">${db.orders.length}</div><div class="lbl">Pedidos realizados</div></div>
+        </div>
+      </div>`;
+  } else if(tab==='usuarios'){
+    content = `
+      <h2>Usuários cadastrados</h2>
+      <input type="text" placeholder="Buscar usuário..." style="padding:9px 13px;border:1px solid var(--line);border-radius:4px;width:300px;margin:16px 0;">
+      <table>
+        <tr><th>Usuário</th><th>E-mail</th><th>Cartas</th><th>Status</th><th>Ações</th></tr>
+        ${allUsers.map(u=>`<tr>
+          <td style="font-weight:bold;">@${esc(u.user)}</td>
+          <td style="color:var(--muted);">${esc(u.email)}</td>
+          <td>${u.cartas}</td>
+          <td><span class="badge" style="background:${statusColor[u.status]}">${u.status}</span></td>
+          <td style="color:var(--muted);cursor:pointer;">ver · suspender</td>
+        </tr>`).join("")}
+      </table>`;
+  } else if(tab==='produtos'){
+    content = `
+      <h2>Cartas cadastradas</h2>
+      <table style="margin-top:16px;">
+        <tr><th>Carta</th><th>Vendedor</th><th>Edição</th><th>Disponibilidade</th><th>Status</th></tr>
+        ${allCards().map(c=>`<tr>
+          <td style="font-weight:bold;">${esc(c.name)}</td>
+          <td style="color:var(--muted);">@${esc(c.seller)}</td>
+          <td>${esc(c.edition)}</td>
+          <td>${availTags(c)}</td>
+          <td><span class="badge" style="background:var(--green)">aprovada</span></td>
+        </tr>`).join("")}
+      </table>`;
+  } else if(tab==='trocas'){
+    content = `
+      <h2>Trocas na plataforma</h2>
+      <table style="margin-top:16px;">
+        <tr><th>ID</th><th>Solicitante</th><th>Carta desejada</th><th>Status</th><th>Data</th></tr>
+        ${db.trades.map(t=>`<tr>
+          <td style="font-family:var(--mono);">${t.id}</td>
+          <td>@${esc(t.withHandle)}</td>
+          <td>${esc(t.targetCard.name)}</td>
+          <td><span class="badge" style="background:${TRADE_STATUS_COLOR[t.status]}">${TRADE_STATUS_LABEL[t.status]}</span></td>
+          <td>${fmtDate(t.createdAt)}</td>
+        </tr>`).join("")}
+      </table>`;
+  } else if(tab==='pedidos'){
+    content = `
+      <h2>Pedidos realizados</h2>
+      ${db.orders.length?`
+      <table style="margin-top:16px;">
+        <tr><th>Pedido</th><th>Data</th><th>Total</th><th>Pagamento</th><th>Status</th></tr>
+        ${db.orders.map(o=>`<tr>
+          <td style="font-family:var(--mono);">${o.id}</td>
+          <td>${fmtDate(o.date)}</td>
+          <td>${fmtPrice(o.total)}</td>
+          <td>${esc(o.payment)}</td>
+          <td>${o.statusHistory[o.statusHistory.length-1].status}</td>
+        </tr>`).join("")}
+      </table>`:`<div class="empty-inline">Nenhum pedido realizado ainda.</div>`}`;
+  } else if(tab==='relatorios'){
+    const porTipo = {};
+    allCards().forEach(c=>{ porTipo[c.type] = (porTipo[c.type]||0)+1; });
+    content = `
+      <h2>Relatórios</h2>
+      <h3 style="font-size:14px;margin:18px 0 10px;">Cartas por tipo elemental</h3>
+      <table>
+        <tr><th>Tipo</th><th>Quantidade</th></tr>
+        ${Object.entries(porTipo).map(([k,v])=>`<tr><td>${TYPE_LABEL[k]}</td><td>${v}</td></tr>`).join("")}
+      </table>`;
+  }
+
+  return `
+    <div class="admin-layout">
+      <div class="admin-side">
+        <div style="font-family:var(--display);font-weight:bold;font-size:18px;margin-bottom:3px;">PokéTrade</div>
+        <div style="font-size:10.5px;color:#9AA6BE;margin-bottom:18px;">Painel administrativo</div>
+        ${items.map(([v,l])=>`<div class="item ${tab===v?'active':''}" data-atab="${v}">${l}</div>`).join("")}
+      </div>
+      <div class="admin-main">${content}</div>
+    </div>
+  `;
+}
+
+function footerHtml(){
+  return `<footer><div class="container">
+    <div class="brand">PokéTrade</div>
+    <div>Marketplace de fãs para fãs, em Pokéville.<br><span style="font-size:10px;opacity:.7;">Cartas, coleções e negociações em um só lugar.</span></div>
+  </div></footer>`;
+}
+
+/* =====================================================
+   RENDER PRINCIPAL
+===================================================== */
+function render(){
+  renderNavbar();
+  const app = document.getElementById("app");
+  const views = {
+    home: viewHome, explorar: viewExplorar, detalhe: viewDetalhe,
+    carrinho: viewCarrinho, troca: viewTroca, "troca-revisao": viewTrocaRevisao,
+    contraproposta: viewContraproposta, trocas: viewTrocas,
+    publicar: viewPublicar, login: viewLogin, perfil: viewPerfil, admin: viewAdmin,
+    pedido: viewPedidoDetalhe, chat: viewChat,
+  };
+  const fn = views[state.view] || viewHome;
+  app.innerHTML = fn();
+  document.getElementById("modal-root").innerHTML = authPromptHtml();
+  bindDynamicInputs();
+}
+
+function bindDynamicInputs(){
+  const input = document.getElementById("navsearch");
+  if(input){
+    input.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter"){
+        state.search = input.value;
+        go("explorar");
+      }
+    });
+  }
+  const fType = document.getElementById("f-type");
+  if(fType) fType.addEventListener("change", ()=>{ state.filters.type = fType.value; state.explorePage = 0; render(); });
+  const fEdition = document.getElementById("f-edition");
+  if(fEdition) fEdition.addEventListener("change", ()=>{ state.filters.edition = fEdition.value; state.explorePage = 0; render(); });
+  const fCond = document.getElementById("f-cond");
+  if(fCond) fCond.addEventListener("change", ()=>{ state.filters.cond = fCond.value; state.explorePage = 0; render(); });
+  const fRarity = document.getElementById("f-rarity");
+  if(fRarity) fRarity.addEventListener("change", ()=>{ state.filters.rarity = fRarity.value; state.explorePage = 0; render(); });
+  document.querySelectorAll('input[name="avail"]').forEach(r=>{
+    r.addEventListener("change", ()=>{ state.filters.avail = r.value; state.explorePage = 0; render(); });
+  });
+  const fPrice = document.getElementById("f-price");
+  if(fPrice) fPrice.addEventListener("input", ()=>{ state.filters.maxPrice = Number(fPrice.value); state.explorePage = 0; render(); });
+  const fSort = document.getElementById("f-sort");
+  if(fSort) fSort.addEventListener("change", ()=>{ state.sortBy = fSort.value; render(); });
+  const cepInput = document.getElementById("cep-input");
+  if(cepInput){
+    cepInput.addEventListener("input", ()=>{ state.cepInput = cepInput.value; });
+    cepInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ render(); } });
+  }
+  bindUploadBox("frente");
+  bindUploadBox("verso");
+  const chatInput = document.getElementById("chat-input");
+  if(chatInput){
+    chatInput.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" && chatInput.value.trim()){
+        doSendChatMessage(state.chatChannel || "br", chatInput.value);
+        render();
+        const win = document.getElementById("chat-window");
+        if(win) win.scrollTop = win.scrollHeight;
+      }
+    });
+  }
+}
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg","image/png","image/webp"];
+function bindUploadBox(target){
+  const box = document.getElementById("upload-" + target);
+  const input = document.getElementById("file-" + target);
+  if(!box || !input) return;
+  box.addEventListener("click", (e)=>{
+    if(e.target.closest("[data-remove-img]")) return;
+    input.click();
+  });
+  input.addEventListener("change", ()=>{
+    const file = input.files && input.files[0];
+    if(!file) return;
+    if(!ALLOWED_IMAGE_TYPES.includes(file.type)){
+      state.publishData._errUpload = "Formato inválido. Envie um arquivo JPG, PNG ou WEBP.";
+      render();
+      return;
+    }
+    if(file.size > MAX_UPLOAD_BYTES){
+      state.publishData._errUpload = "Arquivo maior que 5 MB. Escolha uma imagem menor.";
+      render();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.publishData._errUpload = null;
+      if(target === "frente") state.publishData.imgFrente = reader.result;
+      else state.publishData.imgVerso = reader.result;
+      render();
+    };
+    reader.onerror = () => {
+      state.publishData._errUpload = "Não foi possível ler o arquivo. Tente novamente.";
+      render();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* =====================================================
+   AÇÕES DE NEGÓCIO (separadas da UI p/ clareza e testes)
+===================================================== */
+function doAddToCart(cardId){
+  const c = findCard(cardId);
+  const existing = db.cart.find(i=>i.id===c.id);
+  if(existing) existing.qty++;
+  else db.cart.push({id:c.id, qty:1});
+  persist();
+  toast(`${c.name} adicionada ao carrinho`, "success");
+}
+function doToggleFavorite(cardId){
+  const c = findCard(cardId);
+  const idx = db.favorites.indexOf(cardId);
+  if(idx>=0){ db.favorites.splice(idx,1); toast("Removida dos favoritos"); }
+  else { db.favorites.push(cardId); toast("Adicionada aos favoritos", "success"); addNotification(`"${c.name}" foi adicionada aos seus favoritos`, "fav"); }
+  persist();
+}
+function doCheckout(){
+  const items = db.cart.map(it=>({...it, card: findCard(it.id)})).filter(it=>it.card);
+  const subtotal = items.reduce((a,i)=>a+i.card.price*i.qty,0);
+  const frete = calcFrete(state.cepInput);
+  if(!frete) return false;
+  const payEl = document.querySelector('input[name="pay"]:checked');
+  const payment = payEl ? payEl.parentElement.textContent.trim() : "PIX";
+  db.orderSeq++;
+  const orderId = "PT-" + db.orderSeq;
+  const forecastDate = Date.now() + frete.prazo*86400000;
+  const order = {
+    id: orderId,
+    date: Date.now(),
+    items: items.map(i=>({id:i.id, name:i.card.name, price:i.card.price, qty:i.qty})),
+    subtotal, frete: frete.valor, total: subtotal+frete.valor,
+    payment, forecastDate, freteInfo: frete,
+    statusHistory: [{status:"Pedido realizado", date:Date.now()}],
+  };
+  db.orders.push(order);
+  db.cart = [];
+  persist();
+  addNotification(`Pedido ${orderId} realizado com sucesso`, "order");
+  // confirmação automática de pagamento (simulação de automação)
+  setTimeout(()=>{
+    const o = db.orders.find(x=>x.id===orderId);
+    if(o && o.statusHistory.length===1){
+      o.statusHistory.push({status:"Pagamento confirmado", date:Date.now()});
+      persist();
+      addNotification(`Pagamento do pedido ${orderId} confirmado`, "order");
+    }
+  }, 1200);
+  state.lastOrderId = orderId;
+  return true;
+}
+function doAdvanceOrder(orderId){
+  const o = db.orders.find(x=>x.id===orderId);
+  if(!o) return;
+  const next = ORDER_STAGES[o.statusHistory.length];
+  if(next){
+    o.statusHistory.push({status: next, date: Date.now()});
+    persist();
+    toast(`Status atualizado: ${next}`, "success");
+    if(next==="Enviado") addNotification(`Seu pedido ${orderId} foi enviado`, "order");
+    if(next==="Entregue") addNotification(`Seu pedido ${orderId} foi entregue`, "order");
+  }
+}
+function doSendTrade(){
+  const target = findCard(state.tradeTargetId);
+  const offered = MY_CARDS_POOL.filter(c=>state.tradeOffered.has(c.id));
+  const msg = (document.getElementById("trade-msg")||{}).value || "";
+  const tradeId = "TR-" + (2000 + db.trades.length);
+  const trade = {
+    id: tradeId,
+    direction: "enviada",
+    withHandle: target.seller, withName: target.sellerName || target.seller,
+    targetCard: {id:target.id, name:target.name, type:target.type, hp:target.hp, rarity:target.rarity},
+    offeredCards: offered.map(c=>({id:c.id, name:c.name, type:c.type, hp:c.hp, rarity:c.rarity})),
+    message: msg, status: "aguardando", createdAt: Date.now(),
+  };
+  db.trades.push(trade);
+  persist();
+  addNotification(`Proposta de troca enviada para @${target.seller}`, "trade");
+  // resposta automática simulada do outro colecionador (demonstração de automação)
+  setTimeout(()=>{
+    const t = db.trades.find(x=>x.id===tradeId);
+    if(t && t.status==="aguardando"){
+      t.status = Math.random() < 0.7 ? "aceita" : "recusada";
+      persist();
+      addNotification(`@${t.withHandle} ${t.status==='aceita'?'aceitou':'recusou'} sua proposta de troca`, "trade");
+    }
+  }, 4000);
+}
+function doTradeAction(tradeId, action){
+  const t = db.trades.find(x=>x.id===tradeId);
+  if(!t) return;
+  if(action==="aceitar"){ t.status="aceita"; persist(); toast("Proposta aceita! A troca foi combinada.", "success"); addNotification(`Você aceitou a troca com @${t.withHandle}`, "trade"); }
+  if(action==="recusar"){ t.status="recusada"; persist(); toast("Proposta recusada."); addNotification(`Você recusou a troca com @${t.withHandle}`, "trade"); }
+  if(action==="concluir"){ t.status="concluida"; persist(); toast("Troca marcada como concluída!", "success"); addNotification(`Troca com @${t.withHandle} concluída`, "trade"); }
+}
+function doSendCounter(tradeId){
+  const t = db.trades.find(x=>x.id===tradeId);
+  if(!t) return;
+  const offered = MY_CARDS_POOL.filter(c=>state.tradeOffered.has(c.id));
+  t.status = "contraproposta";
+  t.counterOfferedCards = offered.map(c=>({id:c.id, name:c.name, type:c.type, hp:c.hp, rarity:c.rarity}));
+  persist();
+  addNotification(`Contraproposta enviada para @${t.withHandle}`, "trade");
+}
+function doLogin(email, pass){
+  const u = db.users.find(x=>x.email.toLowerCase()===email.toLowerCase() && x.password===pass);
+  if(!u) return false;
+  db.currentUserEmail = u.email;
+  persist();
+  return true;
+}
+function doCadastro(name, email, pass){
+  db.users.push({name, email, password:pass, handle: email.split("@")[0], avatar:"emblem"});
+  db.currentUserEmail = email;
+  persist();
+}
+const AVATAR_OPTIONS = ["emblem","fogo","agua","eletrico","psiquico","dragao","fada","normal"];
+function avatarGlyph(key, size){
+  const s = size || 34;
+  if(key === "emblem"){
+    return `<svg width="${s}" height="${s}" viewBox="0 0 32 32"><polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="none" stroke="var(--teal)" stroke-width="1.6"/><polygon points="16,10 22,13.5 22,20.5 16,24 10,20.5 10,13.5" fill="#1A2233" stroke="var(--red)" stroke-width="1.4"/><circle cx="16" cy="17" r="2.6" fill="var(--yellow)"/></svg>`;
+  }
+  const c = (TYPE_COLORS[key]||TYPE_COLORS.normal).fill;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${c}">${typeGlyphPath(key)}</svg>`;
+}
+function doSetAvatar(key){
+  const u = currentUser();
+  if(!u) return;
+  u.avatar = key;
+  persist();
+}
+function doPublishCard(){
+  const d = state.publishData;
+  const u = currentUser();
+  if(!u) return null;
+  const avail = (d.venda && d.troca) ? "ambos" : (d.venda ? "venda" : "troca");
+  const newCard = {
+    id: Date.now(),
+    name: d.name, hp: 200 + Math.floor(Math.random()*150), type: d.type || "normal",
+    rarity: 1 + Math.floor(Math.random()*3), edition: d.edition, num: "USR/"+String(Date.now()).slice(-3),
+    condCode: d.cond || "quasenova", avail,
+    price: d.venda ? Number(d.price) : null,
+    tradefor: d.troca ? d.tradefor : null,
+    seller: u.handle, sellerName: u.name, rating: 1,
+    imagem: d.imgFrente || "", imagemVerso: d.imgVerso || "", imagemFonte: d.imgFrente ? "Imagem enviada pelo colecionador" : "",
+  };
+  db.myCards.push(newCard);
+  persist();
+  return newCard;
+}
+
+/* =====================================================
+   VALIDAÇÃO DE E-MAIL simples
+===================================================== */
+function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+/* =====================================================
+   DELEGAÇÃO GLOBAL DE EVENTOS
+===================================================== */
+document.addEventListener("click", (e)=>{
+  const removeImgBtn = e.target.closest("[data-remove-img]");
+  if(removeImgBtn){
+    e.stopPropagation();
+    const target = removeImgBtn.getAttribute("data-remove-img");
+    if(target === "frente") state.publishData.imgFrente = null;
+    else state.publishData.imgVerso = null;
+    render();
+    return;
+  }
+  // modal de autenticação
+  if(e.target.id === "authmodal-cancel" || e.target.id === "auth-modal-overlay"){
+    state.authPromptOpen = false;
+    render();
+    return;
+  }
+  if(e.target.id === "authmodal-login"){
+    state.authPromptOpen = false;
+    state.authMode = "login";
+    go("login", {redirectAfterLogin: state.pendingAction});
+    return;
+  }
+  if(e.target.id === "authmodal-signup"){
+    state.authPromptOpen = false;
+    state.authMode = "cadastro";
+    go("login", {redirectAfterLogin: state.pendingAction});
+    return;
+  }
+  // sino de notificações
+  if(e.target.closest("#btn-open-avatar-picker")){
+    state.showAvatarPicker = !state.showAvatarPicker;
+    render();
+    return;
+  }
+  const dpadBtn = e.target.closest("[data-dpad]");
+  if(dpadBtn){
+    const action = dpadBtn.getAttribute("data-dpad");
+    const total = allCards().length;
+    if(action === "prev") state.featuredIndex = (((state.featuredIndex||0) - 1) % total + total) % total;
+    else if(action === "next") state.featuredIndex = (((state.featuredIndex||0) + 1) % total + total) % total;
+    else if(action === "open"){
+      const idx = ((state.featuredIndex||0) % total + total) % total;
+      go("detalhe", {selectedCardId: allCards()[idx].id});
+      return;
+    }
+    render();
+    return;
+  }
+  const avatarOptBtn = e.target.closest("[data-set-avatar]");
+  if(avatarOptBtn){
+    doSetAvatar(avatarOptBtn.getAttribute("data-set-avatar"));
+    state.showAvatarPicker = false;
+    toast("Avatar atualizado", "success");
+    render();
+    return;
+  }
+  const chatTabBtn = e.target.closest("[data-chat-channel]");
+  if(chatTabBtn){
+    state.chatChannel = chatTabBtn.getAttribute("data-chat-channel");
+    render();
+    return;
+  }
+  if(e.target.id === "btn-chat-send"){
+    const input = document.getElementById("chat-input");
+    const text = input ? input.value : "";
+    if(text.trim()){
+      doSendChatMessage(state.chatChannel || "br", text);
+      render();
+      const win = document.getElementById("chat-window");
+      if(win) win.scrollTop = win.scrollHeight;
+    }
+    return;
+  }
+  const bellEl = e.target.closest("#btn-notif-bell");
+  if(bellEl){
+    e.stopPropagation();
+    state.showNotifPanel = !state.showNotifPanel;
+    render();
+    return;
+  }
+  const notifItemEl = e.target.closest("[data-notif]");
+  if(notifItemEl){
+    const nId = notifItemEl.getAttribute("data-notif");
+    const n = db.notifications.find(x=>x.id===nId);
+    if(n){ n.read = true; persist(); }
+    state.showNotifPanel = false;
+    render();
+    return;
+  }
+  if(e.target.id === "btn-mark-all-read"){
+    db.notifications.forEach(n=>n.read=true);
+    persist();
+    render();
+    return;
+  }
+  // clique fora do painel de notificações fecha o painel
+  if(state.showNotifPanel && !e.target.closest("#notif-panel")){
+    state.showNotifPanel = false;
+    render();
+  }
+  // navegação simples
+  const navEl = e.target.closest("[data-nav]");
+  if(navEl && !navEl.hasAttribute("data-requirelogin")){
+    e.preventDefault();
+    const v = navEl.getAttribute("data-nav");
+    const presetEdition = navEl.getAttribute("data-preset-edition");
+    if(presetEdition){ state.filters.edition = presetEdition; state.search=""; go("explorar"); return; }
+    const ptab = navEl.getAttribute("data-ptab");
+    if(v === "carrinho") go("carrinho");
+    else if(v === "detalhe") go("detalhe");
+    else if(v === "trocas") requireLogin("trocas", {});
+    else if(v === "chat") requireLogin("chat", {});
+    else if(v === "perfil") requireLogin("perfil", ptab?{profileTab:ptab}:{});
+    else if(v === "publicar") requireLogin("publicar", {});
+    else go(v);
+    return;
+  }
+  // navegação que exige login
+  const reqEl = e.target.closest("[data-requirelogin]");
+  if(reqEl){
+    e.preventDefault();
+    requireLogin(reqEl.getAttribute("data-requirelogin"));
+    return;
+  }
+  // favoritar
+  const favEl = e.target.closest("[data-fav]");
+  if(favEl){
+    e.stopPropagation();
+    if(!isLoggedIn()){ requireLogin(state.view, {selectedCardId: state.selectedCardId}); return; }
+    doToggleFavorite(Number(favEl.getAttribute("data-fav")));
+    render();
+    return;
+  }
+  // cartas clicáveis
+  const cardEl = e.target.closest(".cardface");
+  if(cardEl && !cardEl.hasAttribute("data-nav")){
+    const id = Number(cardEl.getAttribute("data-card"));
+    if(cardEl.getAttribute("data-pickable")){
+      if(state.tradeOffered.has(id)) state.tradeOffered.delete(id);
+      else state.tradeOffered.add(id);
+      render();
+      return;
+    }
+    go("detalhe", {selectedCardId:id});
+    return;
+  }
+  if(e.target.id === "btn-comprar"){
+    if(!isLoggedIn()){ requireLogin("detalhe", {selectedCardId: state.selectedCardId}); return; }
+    doAddToCart(state.selectedCardId);
+    go("carrinho");
+    return;
+  }
+  if(e.target.id === "btn-trocar"){
+    if(!isLoggedIn()){ requireLogin("detalhe", {selectedCardId: state.selectedCardId}); return; }
+    state.tradeOffered = new Set();
+    go("troca", {tradeTargetId: state.selectedCardId});
+    return;
+  }
+  if(e.target.id === "btn-revisar-troca"){ go("troca-revisao"); return; }
+  if(e.target.id === "btn-enviar-troca"){
+    doSendTrade();
+    state.tradeOffered = new Set();
+    toast("Proposta de troca enviada! Acompanhe em Minhas trocas.", "success");
+    go("trocas");
+    return;
+  }
+  if(e.target.id === "btn-calc-frete"){
+    const cepInput = document.getElementById("cep-input");
+    state.cepInput = cepInput ? cepInput.value : state.cepInput;
+    if(!calcFrete(state.cepInput)){ toast("CEP inválido — digite os 8 dígitos.", "error"); }
+    render();
+    return;
+  }
+  if(e.target.id === "btn-checkout"){
+    const ok = doCheckout();
+    if(!ok){ toast("Calcule o frete antes de finalizar a compra.", "error"); return; }
+    toast("Compra finalizada com sucesso!", "success");
+    go("pedido", {lastOrderId: state.lastOrderId});
+    return;
+  }
+  const viewOrderBtn = e.target.closest("[data-view-order]");
+  if(viewOrderBtn){ go("pedido", {lastOrderId: viewOrderBtn.getAttribute("data-view-order")}); return; }
+  if(e.target.id === "btn-advance-order"){
+    doAdvanceOrder(e.target.getAttribute("data-order"));
+    render();
+    return;
+  }
+  if(e.target.id === "clear-filters" || e.target.id === "clear-filters-2"){
+    state.filters = {type:"", avail:"", cond:"", edition:"", rarity:"", maxPrice:null};
+    state.search = "";
+    state.explorePage = 0;
+    render();
+    return;
+  }
+  const unfilterBtn = e.target.closest("[data-unfilter]");
+  if(unfilterBtn){
+    const k = unfilterBtn.getAttribute("data-unfilter");
+    if(k==="search") state.search = "";
+    else if(k==="maxPrice") state.filters.maxPrice = null;
+    else state.filters[k] = "";
+    state.explorePage = 0;
+    render();
+    return;
+  }
+  const pageDpadBtn = e.target.closest("[data-page-dpad]");
+  if(pageDpadBtn){
+    const action = pageDpadBtn.getAttribute("data-page-dpad");
+    if(action === "top"){ window.scrollTo(0,0); return; }
+    // recalcula total de páginas com os filtros atuais
+    const f = state.filters;
+    const pr = priceRange();
+    const maxPrice = f.maxPrice || pr.max;
+    const q = state.search.trim().toLowerCase();
+    const count = allCards().filter(c=>{
+      const matchesText = !q || c.name.toLowerCase().includes(q) || (c.pokemon||"").toLowerCase().includes(q) || (c.edition||"").toLowerCase().includes(q);
+      const matchesType = !f.type || c.type===f.type;
+      const matchesAvail = !f.avail || c.avail===f.avail || c.avail==="ambos";
+      const matchesCond = !f.cond || c.condCode===f.cond;
+      const matchesEdition = !f.edition || c.edition===f.edition;
+      const matchesRarity = !f.rarity || String(c.rarity)===String(f.rarity);
+      const matchesPrice = !c.price || c.price<=maxPrice;
+      return matchesText && matchesType && matchesAvail && matchesCond && matchesEdition && matchesRarity && matchesPrice;
+    }).length;
+    const totalPages = Math.max(1, Math.ceil(count / EXPLORE_PAGE_SIZE));
+    const cur = Math.min(state.explorePage||0, totalPages-1);
+    if(action === "first") state.explorePage = 0;
+    else if(action === "last") state.explorePage = totalPages-1;
+    else if(action === "prev") state.explorePage = (cur - 1 + totalPages) % totalPages;
+    else if(action === "next") state.explorePage = (cur + 1) % totalPages;
+    render();
+    window.scrollTo(0,0);
+    return;
+  }
+  // troca — aceitar/recusar/contraproposta
+  const tradeActionBtn = e.target.closest("[data-trade-action]");
+  if(tradeActionBtn){
+    const action = tradeActionBtn.getAttribute("data-trade-action");
+    const tradeId = tradeActionBtn.getAttribute("data-trade");
+    if(action==="contraproposta"){
+      state.tradeOffered = new Set();
+      go("contraproposta", {counterTradeId: tradeId});
+    } else {
+      doTradeAction(tradeId, action);
+      render();
+    }
+    return;
+  }
+  if(e.target.id === "btn-enviar-contraproposta"){
+    const tradeId = e.target.getAttribute("data-trade");
+    doSendCounter(tradeId);
+    state.tradeOffered = new Set();
+    toast("Contraproposta enviada!", "success");
+    go("trocas");
+    return;
+  }
+  // login / cadastro / recuperação
+  const authModeBtn = e.target.closest("[data-authmode]");
+  if(authModeBtn){
+    state.authMode = authModeBtn.getAttribute("data-authmode");
+    state._loginErr = false; state._cadErr = null; state._recSent = false; state._cadForm = {};
+    render();
+    return;
+  }
+  if(e.target.id === "btn-login"){
+    const email = document.getElementById("login-email").value.trim();
+    const pass = document.getElementById("login-pass").value;
+    if(doLogin(email, pass)){
+      toast(`Bem-vindo(a) de volta, ${currentUser().name.split(" ")[0]}!`, "success");
+      const redirect = state.redirectAfterLogin;
+      state.redirectAfterLogin = null;
+      state._loginErr = false;
+      if(redirect) go(redirect.view, redirect.params);
+      else go("perfil");
+    } else {
+      state._loginErr = true;
+      state._loginEmail = email;
+      render();
+    }
+    return;
+  }
+  if(e.target.id === "btn-cadastro"){
+    const name = document.getElementById("cad-name").value.trim();
+    const email = document.getElementById("cad-email").value.trim();
+    const pass = document.getElementById("cad-pass").value;
+    const confirm = document.getElementById("cad-confirm").value;
+    state._cadForm = {name, email};
+    if(!name){ state._cadErr="name"; render(); return; }
+    if(!isValidEmail(email)){ state._cadErr="email"; state._cadErrMsg="Informe um e-mail válido."; render(); return; }
+    if(db.users.some(u=>u.email.toLowerCase()===email.toLowerCase())){ state._cadErr="email"; state._cadErrMsg="Este e-mail já está cadastrado."; render(); return; }
+    if(pass.length<6){ state._cadErr="pass"; render(); return; }
+    if(pass!==confirm){ state._cadErr="confirm"; render(); return; }
+    doCadastro(name, email, pass);
+    state._cadErr = null;
+    state._cadForm = {};
+    toast(`Conta criada com sucesso! Bem-vindo(a), ${name.split(" ")[0]}.`, "success");
+    go("perfil");
+    return;
+  }
+  if(e.target.id === "btn-recuperar"){
+    const email = document.getElementById("rec-email").value.trim();
+    if(!isValidEmail(email)){ toast("Informe um e-mail válido.", "error"); return; }
+    state._recSent = true;
+    state._recEmail = email;
+    render();
+    return;
+  }
+  if(e.target.id === "btn-logout"){
+    db.currentUserEmail = null;
+    persist();
+    toast("Você saiu da sua conta.");
+    go("home");
+    return;
+  }
+  // qty controls do carrinho
+  const qtyBtn = e.target.closest("[data-qty]");
+  if(qtyBtn){
+    const id = Number(qtyBtn.getAttribute("data-id"));
+    const action = qtyBtn.getAttribute("data-qty");
+    const item = db.cart.find(i=>i.id===id);
+    if(action==="inc" && item) item.qty++;
+    if(action==="dec" && item){ item.qty--; if(item.qty<=0) db.cart = db.cart.filter(i=>i.id!==id); }
+    if(action==="remove") db.cart = db.cart.filter(i=>i.id!==id);
+    persist();
+    render();
+    return;
+  }
+  // profile tabs
+  const ptab = e.target.closest("[data-ptab]");
+  if(ptab && state.view==="perfil"){ state.profileTab = ptab.getAttribute("data-ptab"); render(); return; }
+  // admin tabs
+  const atab = e.target.closest("[data-atab]");
+  if(atab){ state.adminTab = atab.getAttribute("data-atab"); render(); return; }
+
+  // publicar — navegação de passos com validação real
+  if(e.target.id === "pub-next-1"){
+    const name = document.getElementById("p-name").value.trim();
+    const edition = document.getElementById("p-edition").value.trim();
+    const type = document.getElementById("p-type").value;
+    const condEl = document.querySelector('input[name="p-cond"]:checked');
+    let hasError = false;
+    state.publishData = {...state.publishData, name, edition, type, cond: condEl?condEl.value:"quasenova"};
+    if(!name){ state.publishData._errName = true; hasError = true; } else state.publishData._errName = false;
+    if(!edition){ state.publishData._errEdition = true; hasError = true; } else state.publishData._errEdition = false;
+    if(hasError){ render(); return; }
+    state.publishStep = 2;
+    render();
+    return;
+  }
+  if(e.target.id === "pub-back-2"){ state.publishStep = 1; render(); return; }
+  if(e.target.id === "pub-next-2"){
+    const venda = document.getElementById("p-venda").checked;
+    const troca = document.getElementById("p-troca").checked;
+    const price = document.getElementById("p-price").value;
+    const tradefor = document.getElementById("p-tradefor").value.trim();
+    state.publishData = {...state.publishData, venda, troca, price, tradefor};
+    let hasError = false;
+    if(!venda && !troca){ state.publishData._errAvail = true; hasError = true; } else state.publishData._errAvail = false;
+    if(venda && (!price || Number(price)<=0)){ state.publishData._errPrice = true; hasError = true; } else state.publishData._errPrice = false;
+    if(troca && !tradefor){ state.publishData._errTradefor = true; hasError = true; } else state.publishData._errTradefor = false;
+    if(hasError){ render(); return; }
+    state.publishStep = 3;
+    render();
+    return;
+  }
+  if(e.target.id === "pub-back-3"){ state.publishStep = 2; render(); return; }
+  if(e.target.id === "pub-finish"){
+    const newCard = doPublishCard();
+    if(!newCard){ requireLogin("publicar", {}); return; }
+    toast(`"${newCard.name}" publicada com sucesso! Ela já está no seu perfil.`, "success");
+    state.publishData = {};
+    state.publishStep = 1;
+    go("perfil", {profileTab: newCard.avail==='troca'?'troca':'venda'});
+    return;
+  }
+});
+
+/* inicialização */
+if(!isLoggedIn()){
+  // mantém navegação livre, mas garante estado consistente
+}
+render();
+</script>
+</body>
+</html>
